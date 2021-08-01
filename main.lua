@@ -180,7 +180,7 @@ runService:BindToRenderStep(shared._id, 1, function()
                 if distance >= chanceValues[hitChance] then
                     marked[arrow] = true;
                     fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
-\
+
                     if arrow.Data.Length > 0 then
                         -- wait depending on the arrows length so the animation can play
                         fastWait(arrow.Data.Length)
