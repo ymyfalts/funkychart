@@ -43,22 +43,10 @@ local userInputService = game:GetService('UserInputService')
 local client = game:GetService('Players').LocalPlayer;
 local random = Random.new()
 
-local fastWait, fastSpawn, fireSignal, rollChance do
-	-- https://eryn.io/gist/3db84579866c099cdd5bb2ff37947cec
-	-- bla bla spawn and wait are bad 
-	-- can also use bindables for the fastspawn idc
+local task = task or getrenv().task;
+local fastWait, fastSpawn = task.wait, task.spawn;
 
-    function fastWait(t)
-        local d = 0;
-        while d < t do
-            d += runService.RenderStepped:wait()
-        end
-    end
-
-    function fastSpawn(f)
-        coroutine.wrap(f)()
-    end
-	
+local fireSignal, rollChance do
 	-- updated for script-ware or whatever
 	-- attempted to update for krnl 
 	local set_identity = (type(syn) == 'table' and syn.set_thread_identity) or setidentity or setthreadcontext
