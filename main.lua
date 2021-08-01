@@ -132,7 +132,7 @@ local chanceValues = {
     Sick = 96,
     Good = 92,
     Ok = 87,
-    Bad = 77,
+    Bad = 75
 }
 
 local marked = {}
@@ -146,7 +146,6 @@ shared._id = game:GetService('HttpService'):GenerateGUID(false)
 runService:BindToRenderStep(shared._id, 1, function()
     if (not library.flags.autoPlayer) then return end
 
-    -- local list = framework.UI.ActiveSections
     local arrows = {}
     for _, obj in next, framework.UI.ActiveSections do
         arrows[#arrows + 1] = obj;
@@ -159,9 +158,6 @@ runService:BindToRenderStep(shared._id, 1, function()
         end
 
         if (arrow.Side == framework.UI.CurrentSide) and (not marked[arrow]) then
-            -- 0 1 2 3
-            -- 4 5 6 7 (number % 4)
-
             local indice = (arrow.Data.Position % 4)
             local position = map[indice]
             
@@ -173,19 +169,24 @@ runService:BindToRenderStep(shared._id, 1, function()
                     continue
                 end
 
-                local hitChance = hitChances[arrow] or rollChance()
-                hitChances[arrow] = hitChance
+                local hitChance = nil
+                if library.flags.autoPlayerMode == 'Manual' then
+                    hitChance = rollChance()
+                else
+                    hitChance = hitChances[arrow] or rollChance()
+                    hitChances[arrow] = hitChance
+                end
 
-                -- if (not chanceValues[hitChance]) then warn('invalid chance', hitChance) end
                 if distance >= chanceValues[hitChance] then
                     marked[arrow] = true;
                     fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
-
-                    -- wait depending on the arrows length so the animation can play
+\
                     if arrow.Data.Length > 0 then
+                        -- wait depending on the arrows length so the animation can play
                         fastWait(arrow.Data.Length)
                     else
-                        fastWait(0.075) -- 0.1 seems to make it miss more, this should be fine enough?
+                        -- 0.1 seems to make it miss more, this should be fine enough?
+                        fastWait(0.075) 
                     end
 
                     fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
