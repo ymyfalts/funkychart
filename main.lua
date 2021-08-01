@@ -1,7 +1,7 @@
 -- 8/1/21
 -- ! KRNL is currently broken, wait for them to fix it
 
--- + Added 'Manual' mode which allows you to force the notes to hiw a specific type by holding down a keybind.
+-- + Added 'Manual' mode which allows you to force the notes to hit a specific type by holding down a keybind.
 -- * Switched fastWait and fastSpawn to Roblox's task libraries
 -- * Attempted to fix 'invalid key to next' errors
 
