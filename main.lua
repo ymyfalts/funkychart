@@ -153,7 +153,7 @@ runService:BindToRenderStep(shared._id, 1, function()
     end
 
     for idx = 1, #arrows do
-        local arrow = list[idx]
+        local arrow = arrows[idx]
         if type(arrow) ~= 'table' then 
             continue
         end
