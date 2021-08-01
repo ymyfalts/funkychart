@@ -208,10 +208,10 @@ local window = library:CreateWindow('Funky Friday') do
     end
 
     local folder = window:AddFolder('Keybinds') do
-        folder:AddBind({ text = 'Sick', flag = 'sickBind', key = 'One', callback = function(val) library.flags.sickHeld = (not val) end, })
-        folder:AddBind({ text = 'Good', flag = 'goodBind', key = 'Two', callback = function(val) library.flags.goodHeld = (not val) end, })
-        folder:AddBind({ text = 'Ok', flag = 'okBind', key = 'Three', callback = function(val) library.flags.okayHeld = (not val) end, })
-        folder:AddBind({ text = 'Bad', flag = 'badBind', key = 'Four', callback = function(val) library.flags.missHeld = (not val) end, })
+        folder:AddBind({ text = 'Sick', flag = 'sickBind', key = Enum.KeyCode.One, hold = true, callback = function(val) library.flags.sickHeld = (not val) end, })
+        folder:AddBind({ text = 'Good', flag = 'goodBind', key = Enum.KeyCode.Two, hold = true, callback = function(val) library.flags.goodHeld = (not val) end, })
+        folder:AddBind({ text = 'Ok', flag = 'okBind', key = Enum.KeyCode.Three, hold = true, callback = function(val) library.flags.okayHeld = (not val) end, })
+        folder:AddBind({ text = 'Bad', flag = 'badBind', key = Enum.KeyCode.Four, hold = true, callback = function(val) library.flags.missHeld = (not val) end, })
     end
 
     local folder = window:AddFolder('Credits') do
