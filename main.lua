@@ -1,7 +1,3 @@
--- 8/2/21
--- ! KRNL is fixed!
--- ! Attempted to make autoplayer miss less.
-
 -- 8/1/21
 -- ! KRNL is currently broken, wait for them to fix it
 
@@ -223,6 +219,7 @@ local window = library:CreateWindow('Funky Friday') do
     end
 
     window:AddLabel({ text = 'Version 1.3' })
+    window:AddLabel({ text = 'Updated 8/2/21' })
 end
 
 library:Init()
