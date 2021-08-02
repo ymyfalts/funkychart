@@ -1,3 +1,7 @@
+-- 8/2/21
+-- ! KRNL is fixed!
+-- ! Attempted to make autoplayer miss less.
+
 -- 8/1/21
 -- ! KRNL is currently broken, wait for them to fix it
 
@@ -135,7 +139,6 @@ local chanceValues = {
     Bad = 75
 }
 
-local marked = {}
 local hitChances = {}
 
 if shared._id then
@@ -157,7 +160,7 @@ runService:BindToRenderStep(shared._id, 1, function()
             continue
         end
 
-        if (arrow.Side == framework.UI.CurrentSide) and (not marked[arrow]) then
+        if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) then
             local indice = (arrow.Data.Position % 4)
             local position = map[indice]
             
@@ -169,28 +172,26 @@ runService:BindToRenderStep(shared._id, 1, function()
                     continue
                 end
 
-                local hitChance = nil
-                if library.flags.autoPlayerMode == 'Manual' then
-                    hitChance = rollChance()
-                else
-                    hitChance = hitChances[arrow] or rollChance()
-                    hitChances[arrow] = hitChance
-                end
+                local result = rollChance()
+                arrow._hitChance = arrow._hitChance or result;
 
+                local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
                 if distance >= chanceValues[hitChance] then
-                    marked[arrow] = true;
-                    fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
+                    fastSpawn(function()
+                        arrow.Marked = true;
+                        fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
 
-                    if arrow.Data.Length > 0 then
-                        -- wait depending on the arrows length so the animation can play
-                        fastWait(arrow.Data.Length)
-                    else
-                        -- 0.1 seems to make it miss more, this should be fine enough?
-                        fastWait(0.075) 
-                    end
+                        if arrow.Data.Length > 0 then
+                            -- wait depending on the arrows length so the animation can play
+                            fastWait(arrow.Data.Length)
+                        else
+                            -- 0.1 seems to make it miss more, this should be fine enough?
+                            fastWait(0.05) 
+                        end
 
-                    fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
-                    marked[arrow] = false;
+                        fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
+                        arrow.Marked = nil;
+                    end)
                 end
             end
         end
@@ -220,6 +221,8 @@ local window = library:CreateWindow('Funky Friday') do
         folder:AddLabel({ text = 'Jan - UI library' })
         folder:AddLabel({ text = 'wally - Script' })
     end
+
+    window:AddLabel({ text = 'Version 1.3' })
 end
 
 library:Init()
