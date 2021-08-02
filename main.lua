@@ -22,11 +22,6 @@
 
 -- You may find some contact information on the GitHub repo.
 
-if KRNL_LOADED then 
-    return game:GetService("Players").LocalPlayer:Kick("\nThis script currently does not work with KRNL.\nStill waiting on Ice Bear to fix it.\nJoin our discord to be notified of any fixes: discord.gg/whnyfcjfpu") 
-end
-
-
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua"))()
 
 local framework, scrollHandler
