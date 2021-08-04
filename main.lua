@@ -220,6 +220,7 @@ local window = library:CreateWindow('Funky Friday') do
 
     window:AddLabel({ text = 'Version 1.3' })
     window:AddLabel({ text = 'Updated 8/2/21' })
+    window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
 end
 
 library:Init()
