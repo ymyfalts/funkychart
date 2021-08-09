@@ -1,5 +1,5 @@
--- 8/1/21
--- ! KRNL is currently broken, wait for them to fix it
+-- 8/2/21
+-- KRNL has since been fixed, enjoy!
 
 -- + Added 'Manual' mode which allows you to force the notes to hit a specific type by holding down a keybind.
 -- * Switched fastWait and fastSpawn to Roblox's task libraries
@@ -15,7 +15,7 @@
 
 -- I have only tested on Synapse X 
 -- Script-Ware v2 should work fine
--- KRNL should work fine (8/1/21: KRNL is currently having issues, wait for a patch)
+-- KRNL should work fine
 
 -- Needed functions: setthreadcontext, getconnections, getgc, getloaodedmodules 
 -- That should be it!
