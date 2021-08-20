@@ -193,7 +193,7 @@ runService:BindToRenderStep(shared._id, 1, function()
 
                         if arrow.Data.Length > 0 then
                             -- wait depending on the arrows length so the animation can play
-                            fastWait(arrow.Data.Length + (random:NextInteger(0, ibrary.flags.autoDelay) / 1000))
+                            fastWait(arrow.Data.Length + (random:NextInteger(0, library.flags.autoDelay) / 1000))
                         else
                             -- 0.1 seems to make it miss more, this should be fine enough?
                             -- nah forget it. get this; u now have to choose ur own release delay lmao
