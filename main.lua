@@ -1,26 +1,37 @@
--- 8/2/21
--- KRNL has since been fixed, enjoy!
+--[[
+Change logs:
 
--- + Added 'Manual' mode which allows you to force the notes to hit a specific type by holding down a keybind.
--- * Switched fastWait and fastSpawn to Roblox's task libraries
--- * Attempted to fix 'invalid key to next' errors
+8/20/21
+! This update was provided by Sezei (https://github.com/greasemonkey123/ff-bot-new)
+    * I renamed some stuff and changed their default 'Autoplayer bind'
 
--- 5/12/21
--- Attempted to fix the autoplayer missing as much.
++ Added 'Miss chance'
++ Added 'Release delay' (note: higher values means a higher chance to miss)
++ Added 'Autoplayer bind'
+* Added new credits
+* Made folder names more clear
 
--- 5/16/21
--- Attempt to fix invisible notes.
--- Added hit chances & an autoplayer toggle
--- ! Hit chances are a bit rough but should work.
+8/2/21
+    ! KRNL has since been fixed, enjoy!
 
--- I have only tested on Synapse X 
--- Script-Ware v2 should work fine
--- KRNL should work fine
+    + Added 'Manual' mode which allows you to force the notes to hit a specific type by holding down a keybind.
+    * Switched fastWait and fastSpawn to Roblox's task libraries
+    * Attempted to fix 'invalid key to next' errors
 
--- Needed functions: setthreadcontext, getconnections, getgc, getloaodedmodules 
--- That should be it!
+5/12/21
+    * Attempted to fix the autoplayer missing as much.
 
--- You may find some contact information on the GitHub repo.
+5/16/21
+    * Attempt to fix invisible notes.
+    * Added hit chances & an autoplayer toggle
+    ! Hit chances are a bit rough but should work.
+
+Information:
+    Officially supported: Synapse X, Script-Ware, KRNL, Fluxus
+    Needed functions: setthreadcontext, getconnections, getgc, getloaodedmodules 
+
+    You can find contact information on the GitHub repository (https://github.com/wally-rblx/funky-friday-autoplay)
+--]]
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua"))()
 
@@ -91,6 +102,7 @@ local fireSignal, rollChance do
             { type = 'Good', value = library.flags.goodChance },
             { type = 'Ok', value = library.flags.okChance },
             { type = 'Bad', value = library.flags.badChance },
+            { type = 'Miss' , value = library.flags.missChance },
         }
         
         table.sort(chances, function(a, b) 
@@ -105,7 +117,8 @@ local fireSignal, rollChance do
         if sum == 0 then
             -- forgot to change this before?
             -- fixed 6/5/21
-            return chances[random:NextInteger(1, 4)].type 
+
+            return chances[random:NextInteger(1, #chances)].type 
         end
 
         local initialWeight = random:NextInteger(0, sum)
@@ -132,7 +145,8 @@ local chanceValues = {
     Sick = 96,
     Good = 92,
     Ok = 87,
-    Bad = 75
+    Bad = 75,
+    Miss = 0
 }
 
 local hitChances = {}
@@ -179,10 +193,11 @@ runService:BindToRenderStep(shared._id, 1, function()
 
                         if arrow.Data.Length > 0 then
                             -- wait depending on the arrows length so the animation can play
-                            fastWait(arrow.Data.Length)
+                            fastWait(arrow.Data.Length + (random:NextInteger(0, ibrary.flags.autoDelay) / 1000))
                         else
                             -- 0.1 seems to make it miss more, this should be fine enough?
-                            fastWait(0.05) 
+                            -- nah forget it. get this; u now have to choose ur own release delay lmao
+                            fastWait(library.flags.autoDelay / 1000) 
                         end
 
                         fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
@@ -195,17 +210,25 @@ runService:BindToRenderStep(shared._id, 1, function()
 end)
 
 local window = library:CreateWindow('Funky Friday') do
-    local folder = window:AddFolder('Main') do
-        folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
+    local folder = window:AddFolder('Autoplayer') do
+        local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
+
+        -- Fixed to use toggle:SetState
+        folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function() 
+            toggle:SetState(not toggle.state)
+        end })
+
         folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual' } })
 
         folder:AddSlider({ text = 'Sick %', flag = 'sickChance', min = 0, max = 100, value = 100 })
         folder:AddSlider({ text = 'Good %', flag = 'goodChance', min = 0, max = 100, value = 0 })
         folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
         folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
+        folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
+        folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 40, max = 350, value = 50 })
     end
 
-    local folder = window:AddFolder('Keybinds') do
+    local folder = window:AddFolder('Manual keybinds') do
         folder:AddBind({ text = 'Sick', flag = 'sickBind', key = Enum.KeyCode.One, hold = true, callback = function(val) library.flags.sickHeld = (not val) end, })
         folder:AddBind({ text = 'Good', flag = 'goodBind', key = Enum.KeyCode.Two, hold = true, callback = function(val) library.flags.goodHeld = (not val) end, })
         folder:AddBind({ text = 'Ok', flag = 'okBind', key = Enum.KeyCode.Three, hold = true, callback = function(val) library.flags.okayHeld = (not val) end, })
@@ -213,13 +236,13 @@ local window = library:CreateWindow('Funky Friday') do
     end
 
     local folder = window:AddFolder('Credits') do
-        folder:AddLabel({ text = 'Credits' })
         folder:AddLabel({ text = 'Jan - UI library' })
         folder:AddLabel({ text = 'wally - Script' })
+        folder:AddLabel({ text = 'Sezei - Contributor'})
     end
 
-    window:AddLabel({ text = 'Version 1.3' })
-    window:AddLabel({ text = 'Updated 8/2/21' })
+    window:AddLabel({ text = 'Version 1.4' })
+    window:AddLabel({ text = 'Updated 8/20/21' })
     window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
 end
 
