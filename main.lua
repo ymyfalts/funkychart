@@ -2,14 +2,14 @@
 Change logs:
 
 8/20/21
-! This update was provided by Sezei (https://github.com/greasemonkey123/ff-bot-new)
-    * I renamed some stuff and changed their default 'Autoplayer bind'
+   ! This update was provided by Sezei (https://github.com/greasemonkey123/ff-bot-new)
+       * I renamed some stuff and changed their default 'Autoplayer bind'
 
-+ Added 'Miss chance'
-+ Added 'Release delay' (note: higher values means a higher chance to miss)
-+ Added 'Autoplayer bind'
-* Added new credits
-* Made folder names more clear
+   + Added 'Miss chance'
+   + Added 'Release delay' (note: higher values means a higher chance to miss)
+   + Added 'Autoplayer bind'
+   * Added new credits
+   * Made folder names more clear
 
 8/2/21
     ! KRNL has since been fixed, enjoy!
