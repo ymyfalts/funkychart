@@ -241,7 +241,7 @@ local window = library:CreateWindow('Funky Friday') do
         folder:AddLabel({ text = 'Sezei - Contributor'})
     end
 
-    window:AddLabel({ text = 'Version 1.4' })
+    window:AddLabel({ text = 'Version 1.4a' })
     window:AddLabel({ text = 'Updated 8/20/21' })
     window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
 end
