@@ -225,7 +225,7 @@ local window = library:CreateWindow('Funky Friday') do
         folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
         folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
         folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
-        folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 40, max = 350, value = 50 })
+        folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 350, value = 50 })
     end
 
     local folder = window:AddFolder('Manual keybinds') do
