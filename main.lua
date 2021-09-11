@@ -1,6 +1,9 @@
 --[[
 Change logs:
 
+9/7/21
+   * Fix Holdnote override - Sezei
+
 8/20/21
    ! This update was provided by Sezei (https://github.com/greasemonkey123/ff-bot-new)
        * I renamed some stuff and changed their default 'Autoplayer bind'
@@ -193,7 +196,7 @@ runService:BindToRenderStep(shared._id, 1, function()
 
                         if arrow.Data.Length > 0 then
                             -- wait depending on the arrows length so the animation can play
-                            fastWait(arrow.Data.Length + (random:NextInteger(0, library.flags.autoDelay) / 1000))
+                            fastWait(arrow.Data.Length - 0.035) -- 35ms (== 1 'tick') to be safe.
                         else
                             -- 0.1 seems to make it miss more, this should be fine enough?
                             -- nah forget it. get this; u now have to choose ur own release delay lmao
