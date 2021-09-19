@@ -3,8 +3,8 @@ Autoplayer script for https://www.roblox.com/games/6447798030<br>
 Open source, feel free to modify it to suit your needs!
 
 ## Reporting bugs
-You can open up an issue on the GitHub (although I don't check it very much) or you may message me on v3rmillion / Discord.
-I have a discord server for another project, although you may use it to talk about funky friday (https://wally.cool/discord)
+You can open up an issue on the GitHub (although I don't check it very much) or you may message me on v3rmillion / Discord.<br>
+I have a discord server for another project, although you may use it to talk about Funky Friday (https://wally.cool/discord)
 
 If you are reporting any issues, please include the following information:
 
