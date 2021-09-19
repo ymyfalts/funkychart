@@ -1,6 +1,9 @@
 --[[
 Change logs:
 
+9/19/21
+   * Miss actually ignores the note.
+
 8/20/21
    ! This update was provided by Sezei (https://github.com/greasemonkey123/ff-bot-new)
        * I renamed some stuff and changed their default 'Autoplayer bind'
@@ -186,7 +189,7 @@ runService:BindToRenderStep(shared._id, 1, function()
                 arrow._hitChance = arrow._hitChance or result;
 
                 local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
-                if distance >= chanceValues[hitChance] then
+                if hitChance ~= "Miss" and distance >= chanceValues[hitChance] then
                     fastSpawn(function()
                         arrow.Marked = true;
                         fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
