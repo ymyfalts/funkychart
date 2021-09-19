@@ -36,6 +36,15 @@ Information:
     You can find contact information on the GitHub repository (https://github.com/wally-rblx/funky-friday-autoplay)
 --]]
 
+local client = game:GetService('Players').LocalPlayer;
+local set_identity = (type(syn) == 'table' and syn.set_thread_identity) or setidentity or setthreadcontext
+
+for _, fn in next, { getconnections, firesignal, set_identity, getloadedmodules, getgc } do
+	if type(fn) ~= 'function' then
+		return client:Kick'unsupported exploit'
+	end
+end
+
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua"))()
 
 local framework, scrollHandler
@@ -63,7 +72,6 @@ end
 
 local runService = game:GetService('RunService')
 local userInputService = game:GetService('UserInputService')
-local client = game:GetService('Players').LocalPlayer;
 local random = Random.new()
 
 local task = task or getrenv().task;
@@ -72,7 +80,7 @@ local fastWait, fastSpawn = task.wait, task.spawn;
 local fireSignal, rollChance do
     -- updated for script-ware or whatever
     -- attempted to update for krnl 
-    local set_identity = (type(syn) == 'table' and syn.set_thread_identity) or setidentity or setthreadcontext
+    
     function fireSignal(target, signal, ...)    
         -- getconnections with InputBegan / InputEnded does not work without setting Synapse to the game's context level
         set_identity(2) 
