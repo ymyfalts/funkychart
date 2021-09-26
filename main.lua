@@ -1,6 +1,11 @@
 --[[
 Change logs:
 
+9/25/21 (patch 1)
+    * Added a few sanity checks
+    * Fixed some errors
+    * Should finally fix invisible notes (if it doesnt, i hate this game)
+
 9/25/21
     * Code refactoring.
     * Fixed unsupported exploit check
@@ -196,6 +201,8 @@ do
     shared._id = game:GetService('HttpService'):GenerateGUID(false)
     runService:BindToRenderStep(shared._id, 1, function()
         if (not library.flags.autoPlayer) then return end
+        if typeof(framework.SongPlayer.CurrentlyPlaying) ~= 'Instance' then return end
+        if framework.SongPlayer.CurrentlyPlaying.ClassName ~= 'Sound' then return end
 
         local arrows = {}
         for _, obj in next, framework.UI.ActiveSections do
@@ -208,7 +215,7 @@ do
                 continue
             end
 
-            if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) then
+            if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) and framework.SongPlayer.CurrentlyPlaying.TimePosition > 0 then
                 local indice = (arrow.Data.Position % 4)
                 local position = map[indice]
                 
@@ -225,9 +232,7 @@ do
                         hitboxOffset = hitboxOffset / 1000
                     end 
 
-                    local noteTime = (1 - math.abs(arrow.Data.Time - (framework.SongPlayer.CurrentTime + hitboxOffset))) * 100;
-                    if (arrow.Data.Time == 0) then continue end
-
+                    local noteTime = (1 - math.abs(arrow.Data.Time - (framework.SongPlayer.CurrentlyPlaying.TimePosition + hitboxOffset))) * 100;
                     local score, noteType = framework.Configs:GenerateScore(noteTime, framework.UI.CurrentDifficulty)
 
                     local result = rollChance()
@@ -240,11 +245,8 @@ do
                             fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
 
                             if arrow.Data.Length > 0 then
-                                -- wait depending on the arrows length so the animation can play
                                 fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000))
                             else
-                                -- 0.1 seems to make it miss more, this should be fine enough?
-                                -- nah forget it. get this; u now have to choose ur own release delay lmao
                                 fastWait(library.flags.autoDelay / 1000) 
                             end
 
