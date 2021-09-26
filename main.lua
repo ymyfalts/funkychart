@@ -294,8 +294,8 @@ do
             folder:AddLabel({ text = 'Sezei - Contributor'})
         end
 
-        window:AddLabel({ text = 'Version 1.4b' })
-        window:AddLabel({ text = 'Updated 9/19/21' })
+        window:AddLabel({ text = 'Version 1.5' })
+        window:AddLabel({ text = 'Updated 9/25/21' })
         window:AddButton({ text = 'Copy discord', callback = function() 
               setclipboard("https://wally.cool/discord")  
         end })
