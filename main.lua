@@ -1,6 +1,10 @@
 --[[
 Change logs:
 
+9/26/21 
+    + Added 'Unload'
+    * Fixed issues with accuracy.
+
 9/25/21 (patch 1)
     * Added a few sanity checks
     * Fixed some errors
@@ -191,11 +195,42 @@ end
 
 -- autoplayer
 do
-    local map = { [0] = 'Left', [1] = 'Down', [2] = 'Up', [3] = 'Right', }
-    local keys = { Up = Enum.KeyCode.Up; Down = Enum.KeyCode.Down; Left = Enum.KeyCode.Left; Right = Enum.KeyCode.Right; }
+    local map = { 
+        [0] = 'Left', 
+        [1] = 'Down', 
+        [2] = 'Up', 
+        [3] = 'Right', 
+    }
 
-    if shared._id then
-        pcall(runService.UnbindFromRenderStep, runService, shared._id)
+    local keys = { 
+        Up = Enum.KeyCode.Up; 
+        Down = Enum.KeyCode.Down; 
+        Left = Enum.KeyCode.Left; 
+        Right = Enum.KeyCode.Right; 
+    }
+
+    local chanceValues = { 
+        Sick = 96, 
+        Good = 92, 
+        Ok = 87, 
+        Bad = 75, 
+    }
+
+    if shared._unload then
+        pcall(shared._unload)
+    end
+
+    function shared._unload()
+        if shared._id then
+            pcall(runService.UnbindFromRenderStep, runService, shared._id)
+        end
+
+        if library.open then
+            library:Close()
+        end
+
+        library.base:ClearAllChildren()
+        library.base:Destroy()
     end
 
     shared._id = game:GetService('HttpService'):GenerateGUID(false)
@@ -233,13 +268,12 @@ do
                     end 
 
                     local noteTime = (1 - math.abs(arrow.Data.Time - (framework.SongPlayer.CurrentlyPlaying.TimePosition + hitboxOffset))) * 100;
-                    local score, noteType = framework.Configs:GenerateScore(noteTime, framework.UI.CurrentDifficulty)
 
                     local result = rollChance()
                     arrow._hitChance = arrow._hitChance or result;
 
                     local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
-                    if hitChance ~= "Miss" and noteType == arrow._hitChance then
+                    if hitChance ~= "Miss" and noteTime > chanceValues[arrow._hitChance] then
                         fastSpawn(function()
                             arrow.Marked = true;
                             fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
@@ -270,9 +304,10 @@ do
             folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function() 
                 toggle:SetState(not toggle.state)
             end })
-
-            folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual' } })
-
+            
+            folder:AddDivider()
+            folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual'  } })
+            folder:AddDivider()
             folder:AddSlider({ text = 'Sick %', flag = 'sickChance', min = 0, max = 100, value = 100 })
             folder:AddSlider({ text = 'Good %', flag = 'goodChance', min = 0, max = 100, value = 0 })
             folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
@@ -296,9 +331,14 @@ do
 
         window:AddLabel({ text = 'Version 1.5' })
         window:AddLabel({ text = 'Updated 9/25/21' })
+        window:AddDivider()
+        window:AddButton({ text = 'Unload script', callback = function() 
+            shared._unload()
+        end })
         window:AddButton({ text = 'Copy discord', callback = function() 
               setclipboard("https://wally.cool/discord")  
         end })
+        window:AddDivider()
         window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
     end
 
