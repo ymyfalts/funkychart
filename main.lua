@@ -1,6 +1,12 @@
 --[[
 Change logs:
 
+9/25/21
+    * Code refactoring.
+    * Fixed unsupported exploit check
+    * Implemented safer URL loading routine.
+    * Tweaked autoplayer (implemented hitbox offset, uses game code to calculate score and hit type now)
+
 9/19/21
    * Miss actually ignores the note.
 
@@ -39,15 +45,40 @@ Information:
 local client = game:GetService('Players').LocalPlayer;
 local set_identity = (type(syn) == 'table' and syn.set_thread_identity) or setidentity or setthreadcontext
 
-for _, fn in next, { getconnections, firesignal, set_identity, getloadedmodules, getgc } do
-	if type(fn) ~= 'function' then
-		return client:Kick'unsupported exploit'
-	end
+local function fail(r) return client:Kick(r) end
+
+-- gracefully handle errors when loading external scripts
+local function urlLoad(url)
+    local success, result = pcall(game.HttpGet, game, url)
+    if (not success) then
+        return fail(string.format('Failed to GET url %q for reason: %q', url, tostring(result)))
+    end
+
+    local fn, err = loadstring(result)
+    if (type(fn) ~= 'function') then
+        return fail(string.format('Failed to loadstring url %q for reason: %q', url, tostring(err)))
+    end
+
+    local results = { pcall(fn) }
+    if (not results[1]) then
+        return fail(string.format('Failed to initialize url %q for reason: %q', url, tostring(results[2])))
+    end
+
+    return unpack(results, 2)
 end
 
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua"))()
+-- attempt to block imcompatible exploits
+-- rewrote because old checks literally did not work
+if type(set_identity) ~= 'function' then return fail('Unsupported exploit (missing "set_thread_identity")') end
+if type(getconnections) ~= 'function' then return fail('Unsupported exploit (missing "getconnections")') end
+if type(getloadedmodules) ~= 'function' then return fail('Unsupported exploit (misssing "getloadedmodules")') end
+if type(getgc) ~= 'function' then return fail('Unsupported exploit (misssing "getgc")') end
+
+local library = urlLoad("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua")
 
 local framework, scrollHandler
+local counter = 0
+
 while true do
     for _, obj in next, getgc(true) do
         if type(obj) == 'table' and rawget(obj, 'GameUI') then
@@ -67,6 +98,10 @@ while true do
         break
     end
 
+    counter = counter + 1
+    if counter > 6 then
+        fail(string.format('Failed to load game dependencies. Details: %s, %s', type(framework), typeof(scrollHandler)))
+    end
     wait(1)
 end
 
@@ -77,6 +112,8 @@ local random = Random.new()
 local task = task or getrenv().task;
 local fastWait, fastSpawn = task.wait, task.spawn;
 
+-- firesignal implementation
+-- hitchance rolling
 local fireSignal, rollChance do
     -- updated for script-ware or whatever
     -- attempted to update for krnl 
@@ -147,117 +184,121 @@ local fireSignal, rollChance do
     end
 end
 
-local map = { [0] = 'Left', [1] = 'Down', [2] = 'Up', [3] = 'Right', }
-local keys = { Up = Enum.KeyCode.Up; Down = Enum.KeyCode.Down; Left = Enum.KeyCode.Left; Right = Enum.KeyCode.Right; }
+-- autoplayer
+do
+    local map = { [0] = 'Left', [1] = 'Down', [2] = 'Up', [3] = 'Right', }
+    local keys = { Up = Enum.KeyCode.Up; Down = Enum.KeyCode.Down; Left = Enum.KeyCode.Left; Right = Enum.KeyCode.Right; }
 
--- they are "weird" because they are in the middle of their Upper & Lower ranges 
--- should hopefully make them more precise!
-local chanceValues = {
-    Sick = 96,
-    Good = 92,
-    Ok = 87,
-    Bad = 75,
-    Miss = 0
-}
-
-local hitChances = {}
-
-if shared._id then
-    pcall(runService.UnbindFromRenderStep, runService, shared._id)
-end
-
-shared._id = game:GetService('HttpService'):GenerateGUID(false)
-runService:BindToRenderStep(shared._id, 1, function()
-    if (not library.flags.autoPlayer) then return end
-
-    local arrows = {}
-    for _, obj in next, framework.UI.ActiveSections do
-        arrows[#arrows + 1] = obj;
+    if shared._id then
+        pcall(runService.UnbindFromRenderStep, runService, shared._id)
     end
 
-    for idx = 1, #arrows do
-        local arrow = arrows[idx]
-        if type(arrow) ~= 'table' then 
-            continue
+    shared._id = game:GetService('HttpService'):GenerateGUID(false)
+    runService:BindToRenderStep(shared._id, 1, function()
+        if (not library.flags.autoPlayer) then return end
+
+        local arrows = {}
+        for _, obj in next, framework.UI.ActiveSections do
+            arrows[#arrows + 1] = obj;
         end
 
-        if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) then
-            local indice = (arrow.Data.Position % 4)
-            local position = map[indice]
-            
-            if (position) then
-                local currentTime = framework.SongPlayer.CurrentlyPlaying.TimePosition
-                local distance = (1 - math.abs(arrow.Data.Time - currentTime)) * 100
+        for idx = 1, #arrows do
+            local arrow = arrows[idx]
+            if type(arrow) ~= 'table' then 
+                continue
+            end
 
-                if (arrow.Data.Time == 0) then
-                    continue
-                end
+            if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) then
+                local indice = (arrow.Data.Position % 4)
+                local position = map[indice]
+                
+                if (position) then
+                    local hitboxOffset = 0 do
+                        local settings = framework.Settings;
+                        local offset = type(settings) == 'table' and settings.HitboxOffset;
+                        local value = type(offset) == 'table' and offset.Value;
 
-                local result = rollChance()
-                arrow._hitChance = arrow._hitChance or result;
-
-                local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
-                if hitChance ~= "Miss" and distance >= chanceValues[hitChance] then
-                    fastSpawn(function()
-                        arrow.Marked = true;
-                        fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
-
-                        if arrow.Data.Length > 0 then
-                            -- wait depending on the arrows length so the animation can play
-                            fastWait(arrow.Data.Length + (random:NextInteger(0, library.flags.autoDelay) / 1000))
-                        else
-                            -- 0.1 seems to make it miss more, this should be fine enough?
-                            -- nah forget it. get this; u now have to choose ur own release delay lmao
-                            fastWait(library.flags.autoDelay / 1000) 
+                        if type(value) == 'number' then
+                            hitboxOffset = value;
                         end
 
-                        fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
-                        arrow.Marked = nil;
-                    end)
+                        hitboxOffset = hitboxOffset / 1000
+                    end 
+
+                    local noteTime = (1 - math.abs(arrow.Data.Time - (framework.SongPlayer.CurrentTime + hitboxOffset))) * 100;
+                    if (arrow.Data.Time == 0) then continue end
+
+                    local score, noteType = framework.Configs:GenerateScore(noteTime, framework.UI.CurrentDifficulty)
+
+                    local result = rollChance()
+                    arrow._hitChance = arrow._hitChance or result;
+
+                    local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
+                    if hitChance ~= "Miss" and noteType == arrow._hitChance then
+                        fastSpawn(function()
+                            arrow.Marked = true;
+                            fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
+
+                            if arrow.Data.Length > 0 then
+                                -- wait depending on the arrows length so the animation can play
+                                fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000))
+                            else
+                                -- 0.1 seems to make it miss more, this should be fine enough?
+                                -- nah forget it. get this; u now have to choose ur own release delay lmao
+                                fastWait(library.flags.autoDelay / 1000) 
+                            end
+
+                            fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
+                            arrow.Marked = nil;
+                        end)
+                    end
                 end
             end
         end
-    end
-end)
-
-local window = library:CreateWindow('Funky Friday') do
-    local folder = window:AddFolder('Autoplayer') do
-        local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
-
-        -- Fixed to use toggle:SetState
-        folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function() 
-            toggle:SetState(not toggle.state)
-        end })
-
-        folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual' } })
-
-        folder:AddSlider({ text = 'Sick %', flag = 'sickChance', min = 0, max = 100, value = 100 })
-        folder:AddSlider({ text = 'Good %', flag = 'goodChance', min = 0, max = 100, value = 0 })
-        folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
-        folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
-        folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
-        folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 350, value = 50 })
-    end
-
-    local folder = window:AddFolder('Manual keybinds') do
-        folder:AddBind({ text = 'Sick', flag = 'sickBind', key = Enum.KeyCode.One, hold = true, callback = function(val) library.flags.sickHeld = (not val) end, })
-        folder:AddBind({ text = 'Good', flag = 'goodBind', key = Enum.KeyCode.Two, hold = true, callback = function(val) library.flags.goodHeld = (not val) end, })
-        folder:AddBind({ text = 'Ok', flag = 'okBind', key = Enum.KeyCode.Three, hold = true, callback = function(val) library.flags.okayHeld = (not val) end, })
-        folder:AddBind({ text = 'Bad', flag = 'badBind', key = Enum.KeyCode.Four, hold = true, callback = function(val) library.flags.missHeld = (not val) end, })
-    end
-
-    local folder = window:AddFolder('Credits') do
-        folder:AddLabel({ text = 'Jan - UI library' })
-        folder:AddLabel({ text = 'wally - Script' })
-        folder:AddLabel({ text = 'Sezei - Contributor'})
-    end
-
-    window:AddLabel({ text = 'Version 1.4b' })
-    window:AddLabel({ text = 'Updated 9/19/21' })
-    window:AddButton({ text = 'Copy discord', callback = function() 
-          setclipboard("https://wally.cool/discord")  
-    end })
-    window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
+    end)
 end
 
-library:Init()
+-- menu
+do
+    local window = library:CreateWindow('Funky Friday') do
+        local folder = window:AddFolder('Autoplayer') do
+            local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
+
+            -- Fixed to use toggle:SetState
+            folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function() 
+                toggle:SetState(not toggle.state)
+            end })
+
+            folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual' } })
+
+            folder:AddSlider({ text = 'Sick %', flag = 'sickChance', min = 0, max = 100, value = 100 })
+            folder:AddSlider({ text = 'Good %', flag = 'goodChance', min = 0, max = 100, value = 0 })
+            folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
+            folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
+            folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
+            folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 350, value = 50 })
+        end
+
+        local folder = window:AddFolder('Manual keybinds') do
+            folder:AddBind({ text = 'Sick', flag = 'sickBind', key = Enum.KeyCode.One, hold = true, callback = function(val) library.flags.sickHeld = (not val) end, })
+            folder:AddBind({ text = 'Good', flag = 'goodBind', key = Enum.KeyCode.Two, hold = true, callback = function(val) library.flags.goodHeld = (not val) end, })
+            folder:AddBind({ text = 'Ok', flag = 'okBind', key = Enum.KeyCode.Three, hold = true, callback = function(val) library.flags.okayHeld = (not val) end, })
+            folder:AddBind({ text = 'Bad', flag = 'badBind', key = Enum.KeyCode.Four, hold = true, callback = function(val) library.flags.missHeld = (not val) end, })
+        end
+
+        local folder = window:AddFolder('Credits') do
+            folder:AddLabel({ text = 'Jan - UI library' })
+            folder:AddLabel({ text = 'wally - Script' })
+            folder:AddLabel({ text = 'Sezei - Contributor'})
+        end
+
+        window:AddLabel({ text = 'Version 1.4b' })
+        window:AddLabel({ text = 'Updated 9/19/21' })
+        window:AddButton({ text = 'Copy discord', callback = function() 
+              setclipboard("https://wally.cool/discord")  
+        end })
+        window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
+    end
+
+    library:Init()
+end
