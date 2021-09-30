@@ -273,7 +273,7 @@ do
                     arrow._hitChance = arrow._hitChance or result;
 
                     local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
-                    if hitChance ~= "Miss" and noteTime > chanceValues[arrow._hitChance] then
+                    if hitChance ~= "Miss" and noteTime >= chanceValues[arrow._hitChance] then
                         fastSpawn(function()
                             arrow.Marked = true;
                             fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
