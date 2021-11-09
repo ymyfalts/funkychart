@@ -125,11 +125,11 @@ local fastWait, fastSpawn = task.wait, task.spawn;
 -- hitchance rolling
 local fireSignal, rollChance do
     -- updated for script-ware or whatever
-    -- attempted to update for krnl 
-    
-    function fireSignal(target, signal, ...)    
+    -- attempted to update for krnl
+
+    function fireSignal(target, signal, ...)
         -- getconnections with InputBegan / InputEnded does not work without setting Synapse to the game's context level
-        set_identity(2) 
+        set_identity(2)
         for _, signal in next, getconnections(signal) do
             if type(signal.Function) == 'function' and islclosure(signal.Function) then
                 local scr = rawget(getfenv(signal.Function), 'script')
@@ -161,9 +161,9 @@ local fireSignal, rollChance do
             { type = 'Bad', value = library.flags.badChance },
             { type = 'Miss' , value = library.flags.missChance },
         }
-        
-        table.sort(chances, function(a, b) 
-            return a.value > b.value 
+
+        table.sort(chances, function(a, b)
+            return a.value > b.value
         end)
 
         local sum = 0;
@@ -175,7 +175,7 @@ local fireSignal, rollChance do
             -- forgot to change this before?
             -- fixed 6/5/21
 
-            return chances[random:NextInteger(1, #chances)].type 
+            return chances[random:NextInteger(1, #chances)].type
         end
 
         local initialWeight = random:NextInteger(0, sum)
@@ -195,26 +195,17 @@ end
 
 -- autoplayer
 do
-    local map = { 
-        [0] = 'Left', 
-        [1] = 'Down', 
-        [2] = 'Up', 
-        [3] = 'Right', 
-    }
-
-    local keys = { 
-        Up = Enum.KeyCode.Up; 
-        Down = Enum.KeyCode.Down; 
-        Left = Enum.KeyCode.Left; 
-        Right = Enum.KeyCode.Right; 
-    }
-
     local chanceValues = { 
-        Sick = 96, 
-        Good = 92, 
-        Ok = 87, 
-        Bad = 75, 
+        Sick = 96,
+        Good = 92,
+        Ok = 87,
+        Bad = 75,
     }
+
+    local keyCodeMap = {}
+    for _, enum in next, Enum.KeyCode:GetEnumItems() do
+        keyCodeMap[enum.Value] = enum
+    end
 
     if shared._unload then
         pcall(shared._unload)
@@ -244,16 +235,21 @@ do
             arrows[#arrows + 1] = obj;
         end
 
+        local count = framework.SongPlayer:GetKeyCount()
+        local mode = count .. 'Key'
+
+        local arrowData = framework.ArrowData[mode].Arrows
+
         for idx = 1, #arrows do
             local arrow = arrows[idx]
-            if type(arrow) ~= 'table' then 
+            if type(arrow) ~= 'table' then
                 continue
             end
 
             if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) and framework.SongPlayer.CurrentlyPlaying.TimePosition > 0 then
-                local indice = (arrow.Data.Position % 4)
-                local position = map[indice]
-                
+                local indice = (arrow.Data.Position % count)
+                local position = indice .. ''
+
                 if (position) then
                     local hitboxOffset = 0 do
                         local settings = framework.Settings;
@@ -265,7 +261,7 @@ do
                         end
 
                         hitboxOffset = hitboxOffset / 1000
-                    end 
+                    end
 
                     local noteTime = (1 - math.abs(arrow.Data.Time - (framework.SongPlayer.CurrentlyPlaying.TimePosition + hitboxOffset))) * 100;
 
@@ -276,15 +272,17 @@ do
                     if hitChance ~= "Miss" and noteTime >= chanceValues[arrow._hitChance] then
                         fastSpawn(function()
                             arrow.Marked = true;
-                            fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
+                            local keyCode = keyCodeMap[arrowData[position].Keybinds.Keyboard[1]]
+
+                            fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
 
                             if arrow.Data.Length > 0 then
                                 fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000))
                             else
-                                fastWait(library.flags.autoDelay / 1000) 
+                                fastWait(library.flags.autoDelay / 1000)
                             end
 
-                            fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keys[position], UserInputType = Enum.UserInputType.Keyboard }, false)
+                            fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
                             arrow.Marked = nil;
                         end)
                     end
@@ -301,10 +299,10 @@ do
             local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
 
             -- Fixed to use toggle:SetState
-            folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function() 
+            folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function()
                 toggle:SetState(not toggle.state)
             end })
-            
+
             folder:AddDivider()
             folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual'  } })
             folder:AddDivider()
@@ -332,11 +330,11 @@ do
         window:AddLabel({ text = 'Version 1.5a' })
         window:AddLabel({ text = 'Updated 9/26/21' })
         window:AddDivider()
-        window:AddButton({ text = 'Unload script', callback = function() 
+        window:AddButton({ text = 'Unload script', callback = function()
             shared._unload()
         end })
-        window:AddButton({ text = 'Copy discord', callback = function() 
-              setclipboard("https://wally.cool/discord")  
+        window:AddButton({ text = 'Copy discord', callback = function()
+              setclipboard("https://wally.cool/discord")
         end })
         window:AddDivider()
         window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
