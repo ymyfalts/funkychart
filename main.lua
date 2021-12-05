@@ -1,6 +1,12 @@
 --[[
 Change logs:
 
+12/5/21
+    * Fixed issues with noteTime calculation, causing some songs like Triple Trouble to break. Report bugs as always
+
+11/9/21
+    + Added support for new modes (9Key for example)
+
 9/26/21 
     + Added 'Unload'
     * Fixed issues with accuracy.
@@ -263,7 +269,18 @@ do
                         hitboxOffset = hitboxOffset / 1000
                     end
 
-                    local noteTime = (1 - math.abs(arrow.Data.Time - (framework.SongPlayer.CurrentlyPlaying.TimePosition + hitboxOffset))) * 100;
+                    local songTime = framework.SongPlayer.CurrentTime do
+                        local configs = framework.SongPlayer.CurrentSongConfigs
+                        local playbackSpeed = type(configs) == 'table' and configs.PlaybackSpeed
+
+                        if type(playbackSpeed) ~= 'number' then
+                            playbackSpeed = 1
+                        end
+
+                        songTime = songTime /  playbackSpeed
+                    end
+
+                    local noteTime = math.clamp((1 - math.abs(arrow.Data.Time - (songTime + hitboxOffset))) * 100, 0, 100)
 
                     local result = rollChance()
                     arrow._hitChance = arrow._hitChance or result;
