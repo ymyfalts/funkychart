@@ -344,8 +344,8 @@ do
             folder:AddLabel({ text = 'Sezei - Contributor'})
         end
 
-        window:AddLabel({ text = 'Version 1.7' })
-        window:AddLabel({ text = 'Updated 11/9/21' })
+        window:AddLabel({ text = 'Version 1.7a' })
+        window:AddLabel({ text = 'Updated 12/5/21' })
         window:AddDivider()
         window:AddButton({ text = 'Unload script', callback = function()
             shared._unload()
