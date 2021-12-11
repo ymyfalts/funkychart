@@ -122,6 +122,8 @@ end
 
 local runService = game:GetService('RunService')
 local userInputService = game:GetService('UserInputService')
+local virtualInputManager = game:GetService('VirtualInputManager')
+
 local random = Random.new()
 
 local task = task or getrenv().task;
@@ -291,7 +293,11 @@ do
                             arrow.Marked = true;
                             local keyCode = keyCodeMap[arrowData[position].Keybinds.Keyboard[1]]
 
-                            fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
+                            if library.flags.secondaryPressMode then
+                                virtualInputManager:SendKeyEvent(true, keyCode, false, nil)
+                            else
+                                fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
+                            end
 
                             if arrow.Data.Length > 0 then
                                 fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000))
@@ -299,7 +305,12 @@ do
                                 fastWait(library.flags.autoDelay / 1000)
                             end
 
-                            fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
+                            if library.flags.secondaryPressMode then
+                                virtualInputManager:SendKeyEvent(false, keyCode, false, nil)
+                            else
+                                fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
+                            end
+
                             arrow.Marked = nil;
                         end)
                     end
@@ -314,6 +325,8 @@ do
     local window = library:CreateWindow('Funky Friday') do
         local folder = window:AddFolder('Autoplayer') do
             local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
+
+            folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
 
             -- Fixed to use toggle:SetState
             folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function()
@@ -344,8 +357,8 @@ do
             folder:AddLabel({ text = 'Sezei - Contributor'})
         end
 
-        window:AddLabel({ text = 'Version 1.7a' })
-        window:AddLabel({ text = 'Updated 12/5/21' })
+        window:AddLabel({ text = 'Version 1.7b' })
+        window:AddLabel({ text = 'Updated 12/11/21' })
         window:AddDivider()
         window:AddButton({ text = 'Unload script', callback = function()
             shared._unload()
