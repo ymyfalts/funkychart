@@ -138,14 +138,18 @@ local fireSignal, rollChance do
     function fireSignal(target, signal, ...)
         -- getconnections with InputBegan / InputEnded does not work without setting Synapse to the game's context level
         set_identity(2)
+        local didFire = false
         for _, signal in next, getconnections(signal) do
             if type(signal.Function) == 'function' and islclosure(signal.Function) then
                 local scr = rawget(getfenv(signal.Function), 'script')
                 if scr == target then
-                    pcall(signal.Function, ...)
+                    didFire = true
+                    local s, e = pcall(signal.Function, ...)
+                    if not s then fail("failed to call input: " .. tostring(e)) end
                 end
             end
         end
+        if not didFire then fail"couldnt fire input signal" end
         set_identity(7)
     end
 
@@ -357,7 +361,7 @@ do
             folder:AddLabel({ text = 'Sezei - Contributor'})
         end
 
-        window:AddLabel({ text = 'Version 1.7b' })
+        window:AddLabel({ text = 'Version 1.7c' })
         window:AddLabel({ text = 'Updated 12/11/21' })
         window:AddDivider()
         window:AddButton({ text = 'Unload script', callback = function()
