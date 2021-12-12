@@ -326,7 +326,7 @@ do
         local folder = window:AddFolder('Autoplayer') do
             local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
 
-            folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
+            -- folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
 
             -- Fixed to use toggle:SetState
             folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function()
