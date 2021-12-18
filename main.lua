@@ -145,11 +145,11 @@ local fireSignal, rollChance do
                 if scr == target then
                     didFire = true
                     local s, e = pcall(signal.Function, ...)
-                    if not s then fail("failed to call input: " .. tostring(e)) end
+                --    if not s then fail("failed to call input: " .. tostring(e)) end
                 end
             end
         end
-        if not didFire then fail"couldnt fire input signal" end
+        -- if not didFire then fail"couldnt fire input signal" end
         set_identity(7)
     end
 
@@ -258,6 +258,10 @@ do
                 continue
             end
 
+            if type(arrow.NoteDataConfigs) == 'table' and arrow.NoteDataConfigs.Type == 'Death' then 
+                continue
+            end
+
             if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) and framework.SongPlayer.CurrentlyPlaying.TimePosition > 0 then
                 local indice = (arrow.Data.Position % count)
                 local position = indice .. ''
@@ -330,8 +334,8 @@ do
         local folder = window:AddFolder('Autoplayer') do
             local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
 
-            folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
-            folder:AddLabel({ text = "Enable if autoplayer breaks" })
+            -- folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
+            -- folder:AddLabel({ text = "Enable if autoplayer breaks" })
             -- Fixed to use toggle:SetState
             folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function()
                 toggle:SetState(not toggle.state)
@@ -361,7 +365,7 @@ do
             folder:AddLabel({ text = 'Sezei - Contributor'})
         end
 
-        window:AddLabel({ text = 'Version 1.7c' })
+        window:AddLabel({ text = 'Version 1.7d' })
         window:AddLabel({ text = 'Updated 12/11/21' })
         window:AddDivider()
         window:AddButton({ text = 'Unload script', callback = function()
