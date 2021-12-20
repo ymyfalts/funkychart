@@ -334,8 +334,9 @@ do
         local folder = window:AddFolder('Autoplayer') do
             local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
 
-            -- folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
-            -- folder:AddLabel({ text = "Enable if autoplayer breaks" })
+            folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
+            folder:AddLabel({ text = "Enable if autoplayer breaks" })
+            
             -- Fixed to use toggle:SetState
             folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function()
                 toggle:SetState(not toggle.state)
@@ -365,8 +366,10 @@ do
             folder:AddLabel({ text = 'Sezei - Contributor'})
         end
 
-        window:AddLabel({ text = 'Version 1.7d' })
+        window:AddLabel({ text = 'Version 1.7e' })
         window:AddLabel({ text = 'Updated 12/11/21' })
+        window:AddLabel({ text = 'i hate ice bear sometimes' })
+      
         window:AddDivider()
         window:AddButton({ text = 'Unload script', callback = function()
             shared._unload()
