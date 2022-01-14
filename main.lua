@@ -1,6 +1,11 @@
 --[[
 Change logs:
 
+1/14/22
+    * first update of the new year!
+    * added a settings saving / loading system.
+    * added some save manager code for this ui library, not all option types are supported or tested.
+
 12/5/21
     * Fixed issues with noteTime calculation, causing some songs like Triple Trouble to break. Report bugs as always
 
@@ -90,6 +95,7 @@ if type(getloadedmodules) ~= 'function' then return fail('Unsupported exploit (m
 if type(getgc) ~= 'function' then return fail('Unsupported exploit (misssing "getgc")') end
 
 local library = urlLoad("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua")
+local httpService = game:GetService('HttpService')
 
 local framework, scrollHandler
 local counter = 0
@@ -205,6 +211,101 @@ local fireSignal, rollChance do
     end
 end
 
+-- save manager
+local saveManager = {} do
+    local optionTypes = {
+        toggle = {
+            Save = function(option)
+                return { type = 'toggle', state = option.state }
+            end,
+            Load = function(option, data)
+                option:SetState(data.state)
+            end
+        },
+        bind = {
+            Save = function(option)
+                return { type = 'bind', key = option.key }
+            end,
+            Load = function(option, data)
+                option:SetKey(data.key)
+            end
+        },
+        slider = {
+            Save = function(option)
+                return { type = 'slider', value = option.value }
+            end,
+            Load = function(option, data)
+                option:SetValue(data.value)
+            end,
+        },
+        color = {
+            Save = function(option)
+                return { type = 'color', color = option.color:ToHex() }
+            end,
+            Load = function(option, data)
+                option:SetValue(Color3.fromHex(data.color))
+            end
+        },
+        list = {
+            Save = function(option)
+                return { type = 'list', value = option.value }
+            end,
+            Load = function(option, data)
+                option:SetValue(data.value)
+            end
+        },
+    }
+
+    local function recurseLibraryOptions(root, callback)
+        for _, option in next, root do
+            if option.type == 'folder' then
+                recurseLibraryOptions(option.options, callback)
+            else
+                callback(option)
+            end
+        end
+    end
+
+    function saveManager:Save()
+        local data = {}
+
+        for _, window in next, library.windows do
+            local storage = {}
+            data[window.title] = storage
+
+            recurseLibraryOptions(window.options, function(option)
+                local parser = optionTypes[option.type]
+                if parser then
+                    storage[option.flag] = parser.Save(option)
+                end
+            end)
+        end
+
+        writefile('funky_friday_autoplayer.json', httpService:JSONEncode(data))
+    end
+
+    function saveManager:Load()
+        local isfile = isfile or function(name) return (pcall(readfile, name)) end
+        if not isfile('funky_friday_autoplayer.json') then return end
+
+        local input = readfile('funky_friday_autoplayer.json')
+        local success, data = pcall(function() return httpService:JSONDecode(input) end)
+
+        if not success then return end
+
+        for _, window in next, library.windows do
+            local storage = data[window.title]
+
+            recurseLibraryOptions(window.options, function(option)
+                local parser = optionTypes[option.type]
+                if parser then
+                    parser.Load(option, storage[option.flag])
+                end
+            end)
+        end
+    end
+end
+
 -- autoplayer
 do
     local chanceValues = { 
@@ -236,7 +337,7 @@ do
         library.base:Destroy()
     end
 
-    shared._id = game:GetService('HttpService'):GenerateGUID(false)
+    shared._id = httpService:GenerateGUID(false)
     runService:BindToRenderStep(shared._id, 1, function()
         if (not library.flags.autoPlayer) then return end
         if typeof(framework.SongPlayer.CurrentlyPlaying) ~= 'Instance' then return end
@@ -360,15 +461,22 @@ do
             folder:AddBind({ text = 'Bad', flag = 'badBind', key = Enum.KeyCode.Four, hold = true, callback = function(val) library.flags.missHeld = (not val) end, })
         end
 
+        if type(readfile) == 'function' and type(writefile) == 'function' then
+            local storage = window:AddFolder('Settings') do
+                storage:AddButton({ text = 'Save settings', callback = function() saveManager:Save() end })
+                storage:AddButton({ text = 'Load settings', callback = function() saveManager:Load() end })
+            end
+        end
+
         local folder = window:AddFolder('Credits') do
             folder:AddLabel({ text = 'Jan - UI library' })
             folder:AddLabel({ text = 'wally - Script' })
             folder:AddLabel({ text = 'Sezei - Contributor'})
         end
 
-        window:AddLabel({ text = 'Version 1.7e' })
+        window:AddLabel({ text = 'Version 1.8' })
         window:AddLabel({ text = 'Updated 12/11/21' })
-        window:AddLabel({ text = 'i hate ice bear sometimes' })
+        window:AddLabel({ text = 'new save manager!' })
       
         window:AddDivider()
         window:AddButton({ text = 'Unload script', callback = function()
