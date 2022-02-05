@@ -359,8 +359,12 @@ do
                 continue
             end
 
-            if type(arrow.NoteDataConfigs) == 'table' and arrow.NoteDataConfigs.Type == 'Death' then 
-                continue
+            local ignoredNoteTypes = { Death = true, ['Pea Note'] = true }
+
+            if type(arrow.NoteDataConfigs) == 'table' then 
+                if ignoredNoteTypes[arrow.NoteDataConfigs.Type] then 
+                    continue
+                end
             end
 
             if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) and framework.SongPlayer.CurrentlyPlaying.TimePosition > 0 then
