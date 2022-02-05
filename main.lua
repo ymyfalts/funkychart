@@ -539,6 +539,7 @@ do
 
     if type(readfile) == 'function' and type(writefile) == 'function' and type(makefolder) == 'function' and type(isfolder) == 'function' then
         if not isfolder('funky_friday_autoplayer\\configs') then
+            makefolder('funky_friday_autoplayer')
             makefolder('funky_friday_autoplayer\\configs')
         end
 
@@ -592,11 +593,11 @@ do
 
             window:AddButton({ text = 'Refresh configs', callback = library.refreshConfigs })
         end
+        task.delay(1, library.refreshConfigs)
     else
         notify('Failed to create configs window due to your exploit missing certain file functions.', 2)
     end
 
     library:Init()
     library.notify(string.format('Loaded script in %.4f second(s)!\nUsed Http cache: %s', tick() - start, tostring(usedCache)), 3)
-    library.refreshConfigs()
 end
