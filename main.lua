@@ -62,14 +62,27 @@ Information:
     You can find contact information on the GitHub repository (https://github.com/wally-rblx/funky-friday-autoplay)
 --]]
 
+local start = tick()
 local client = game:GetService('Players').LocalPlayer;
 local set_identity = (type(syn) == 'table' and syn.set_thread_identity) or setidentity or setthreadcontext
 
 local function fail(r) return client:Kick(r) end
 
 -- gracefully handle errors when loading external scripts
+-- added a cache to make hot reloading a bit faster
+
+local usedCache = shared.__urlcache and next(shared.__urlcache) ~= nil
+
+shared.__urlcache = shared.__urlcache or {}
 local function urlLoad(url)
-    local success, result = pcall(game.HttpGet, game, url)
+    local success, result
+
+    if shared.__urlcache[url] then
+        success, result = true, shared.__urlcache[url]
+    else
+        success, result = pcall(game.HttpGet, game, url)
+    end
+
     if (not success) then
         return fail(string.format('Failed to GET url %q for reason: %q', url, tostring(result)))
     end
@@ -84,6 +97,7 @@ local function urlLoad(url)
         return fail(string.format('Failed to initialize url %q for reason: %q', url, tostring(results[2])))
     end
 
+    shared.__urlcache[url] = result
     return unpack(results, 2)
 end
 
@@ -95,6 +109,8 @@ if type(getloadedmodules) ~= 'function' then return fail('Unsupported exploit (m
 if type(getgc) ~= 'function' then return fail('Unsupported exploit (misssing "getgc")') end
 
 local library = urlLoad("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua")
+local akali = urlLoad("https://gist.githubusercontent.com/wally-rblx/e010db020afe8259048a0c3c7262cdf8/raw/76ae0921ac9bd3215017e635d2c1037a37262240/notif.lua")
+
 local httpService = game:GetService('HttpService')
 
 local framework, scrollHandler
@@ -150,8 +166,7 @@ local fireSignal, rollChance do
                 local scr = rawget(getfenv(signal.Function), 'script')
                 if scr == target then
                     didFire = true
-                    local s, e = pcall(signal.Function, ...)
-                --    if not s then fail("failed to call input: " .. tostring(e)) end
+                    pcall(signal.Function, ...)
                 end
             end
         end
@@ -213,6 +228,7 @@ end
 
 -- save manager
 local saveManager = {} do
+    local defaultSettings = [[{"Funky Friday":{"goodChance":{"value":0,"type":"slider"},"badChance":{"value":0,"type":"slider"},"okChance":{"value":0,"type":"slider"},"autoPlayer":{"state":false,"type":"toggle"},"goodBind":{"key":"Two","type":"bind"},"sickChance":{"value":100,"type":"slider"},"okBind":{"key":"Three","type":"bind"},"sickBind":{"key":"One","type":"bind"},"Menu toggle":{"key":"Delete","type":"bind"},"secondaryPressMode":{"state":false,"type":"toggle"},"autoDelay":{"value":50,"type":"slider"},"autoPlayerToggle":{"key":"End","type":"bind"},"badBind":{"key":"Four","type":"bind"},"autoPlayerMode":{"value":"Chances","type":"list"},"missChance":{"value":0,"type":"slider"}}}]]
     local optionTypes = {
         toggle = {
             Save = function(option)
@@ -266,10 +282,12 @@ local saveManager = {} do
         end
     end
 
-    function saveManager:Save()
+    function saveManager:SaveConfig(name)
         local data = {}
 
         for _, window in next, library.windows do
+            if window.title == 'Configs' then continue end
+
             local storage = {}
             data[window.title] = storage
 
@@ -281,19 +299,32 @@ local saveManager = {} do
             end)
         end
 
-        writefile('funky_friday_autoplayer.json', httpService:JSONEncode(data))
+        local s, err = pcall(writefile, 'funky_friday_autoplayer\\configs\\' .. name, httpService:JSONEncode(data))
+        if not s then
+            return library.notify(string.format('Failed to save config %q because %q', name, err))
+        end
+
+        library.refreshConfigs()
     end
 
-    function saveManager:Load()
-        local isfile = isfile or function(name) return (pcall(readfile, name)) end
-        if not isfile('funky_friday_autoplayer.json') then return end
+    function saveManager:LoadConfig(name)
+        local data
+        if name == 'default' then
+            data = defaultSettings
+        else
+            data = readfile('funky_friday_autoplayer\\configs\\' .. name)
+        end
 
-        local input = readfile('funky_friday_autoplayer.json')
-        local success, data = pcall(function() return httpService:JSONDecode(input) end)
 
-        if not success then return end
+
+        local success, data = pcall(function() return httpService:JSONDecode(data) end)
+        if not success then 
+            return library.notify(string.format('Failed to load config %q because %q', name, data))
+        end
 
         for _, window in next, library.windows do
+            if window.title == 'Configs' then continue end
+
             local storage = data[window.title]
 
             recurseLibraryOptions(window.options, function(option)
@@ -304,6 +335,7 @@ local saveManager = {} do
             end)
         end
     end
+
 end
 
 -- autoplayer
@@ -324,6 +356,7 @@ do
         pcall(shared._unload)
     end
 
+    library.threads = {}
     function shared._unload()
         if shared._id then
             pcall(runService.UnbindFromRenderStep, runService, shared._id)
@@ -335,6 +368,10 @@ do
 
         library.base:ClearAllChildren()
         library.base:Destroy()
+
+        for i = 1, #library.threads do
+            coroutine.close(library.threads[i])
+        end
     end
 
     shared._id = httpService:GenerateGUID(false)
@@ -465,33 +502,101 @@ do
             folder:AddBind({ text = 'Bad', flag = 'badBind', key = Enum.KeyCode.Four, hold = true, callback = function(val) library.flags.missHeld = (not val) end, })
         end
 
-        if type(readfile) == 'function' and type(writefile) == 'function' then
-            local storage = window:AddFolder('Settings') do
-                storage:AddButton({ text = 'Save settings', callback = function() saveManager:Save() end })
-                storage:AddButton({ text = 'Load settings', callback = function() saveManager:Load() end })
-            end
-        end
-
         local folder = window:AddFolder('Credits') do
             folder:AddLabel({ text = 'Jan - UI library' })
             folder:AddLabel({ text = 'wally - Script' })
             folder:AddLabel({ text = 'Sezei - Contributor'})
+            folder:AddLabel({ text = 'aKinlei - Notifications'})
         end
 
-        window:AddLabel({ text = 'Version 1.8' })
+        window:AddLabel({ text = 'Version 1.9' })
         window:AddLabel({ text = 'Updated 12/11/21' })
         window:AddLabel({ text = 'new save manager!' })
       
         window:AddDivider()
         window:AddButton({ text = 'Unload script', callback = function()
             shared._unload()
+            library.notify('Successfully unloaded script!', 2)
         end })
         window:AddButton({ text = 'Copy discord', callback = function()
-              setclipboard("https://wally.cool/discord")
+            if pcall(setclipboard, "https://wally.cool/discord") then
+                library.notify('Successfully copied discord', 2)
+            end
         end })
         window:AddDivider()
         window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
     end
 
+    local function notify(text, duration)
+        return akali.Notify({
+            Title = 'Funky friday autoplayer', 
+            Description = text,
+            Duration = duration or 1,
+        })
+    end
+
+    library.notify = notify
+
+    if type(readfile) == 'function' and type(writefile) == 'function' and type(makefolder) == 'function' and type(isfolder) == 'function' then
+        if not isfolder('funky_friday_autoplayer\\configs') then
+            makefolder('funky_friday_autoplayer\\configs')
+        end
+
+        local window = library:CreateWindow('Configs') do
+            window:AddBox({ text = 'Config name', value = '', flag = 'configNameInput' })
+            library._configList = window:AddList({ text = 'Config list', values = { 'default' }, flag = 'configList' })
+            
+            window:AddButton({ text = 'Save config', callback = function()
+                local name = library.flags.configNameInput
+                if name:gsub(' ', '') == '' then
+                    return notify('Failed to save. [invalid config name]', 3)
+                end
+
+                saveManager:SaveConfig(name)
+            end })
+            
+            window:AddButton({ text = 'Load config', callback = function()
+                local name = library.flags.configList
+                
+                if name:gsub(' ', '') == '' then
+                    return notify('Failed to load. [invalid config name]', 3)
+                end
+
+                if not isfile('funky_friday_autoplayer\\configs\\' .. name) then
+                    return notify('Failed to load. [config does not exist]', 3)
+                end
+
+                saveManager:LoadConfig(name)
+            end })
+
+            window:AddDivider()
+
+            function library.refreshConfigs()
+                for _, value in next, library._configList.values do
+                    if value == 'default' then continue end
+                    library._configList:RemoveValue(tostring(value))
+                end
+
+                local files = listfiles('funky_friday_autoplayer\\configs')
+                for i = 1, #files do
+                    files[i] = files[i]:gsub('funky_friday_autoplayer\\configs\\', '')
+                    library._configList:AddValue(files[i])
+                end
+
+                if files[1] then
+                    library._configList:SetValue(files[1])
+                else
+                    library._configList:SetValue('default')
+                end
+            end
+
+            window:AddButton({ text = 'Refresh configs', callback = library.refreshConfigs })
+        end
+    else
+        notify('Failed to create configs window due to your exploit missing certain file functions.', 2)
+    end
+
     library:Init()
+    library.notify(string.format('Loaded script in %.4f second(s)!\nUsed Http cache: %s', tick() - start, tostring(usedCache)), 3)
+    library.refreshConfigs()
 end
