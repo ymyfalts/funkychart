@@ -494,7 +494,8 @@ do
             folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
             folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
             folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
-            folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 350, value = 20 })
+            folder:AddDivider()
+            folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 500, value = 20 })
             folder:AddSlider({ text = 'Held delay (ms)', flag = 'heldDelay', min = -20, max = 100, value = -20 })
         end
 
