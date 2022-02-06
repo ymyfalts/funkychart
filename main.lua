@@ -301,7 +301,11 @@ local saveManager = {} do
 
         local s, err = pcall(writefile, 'funky_friday_autoplayer\\configs\\' .. name, httpService:JSONEncode(data))
         if not s then
-            return library.notify(string.format('Failed to save config %q because %q', name, err))
+            library.notify(string.format('Failed to save config %q because %q', name, err), 2)
+            if err == 'invalid extension' then
+                library.notify('Try adding a file extension after your config name. ex: ".json", ".txt", ".dat"', 2)
+            end
+            return
         end
 
         library.refreshConfigs()
@@ -314,8 +318,6 @@ local saveManager = {} do
         else
             data = readfile('funky_friday_autoplayer\\configs\\' .. name)
         end
-
-
 
         local success, data = pcall(function() return httpService:JSONDecode(data) end)
         if not success then 
@@ -450,9 +452,9 @@ do
                             end
 
                             if arrow.Data.Length > 0 then
-                                fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000))
+                                fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000) + (library.flags.heldDelay / 1000))
                             else
-                                fastWait(library.flags.autoDelay / 1000)
+                                fastWait(library.flags.autoDelay / 1000 + (library.flags.heldDelay / 1000))
                             end
 
                             if library.flags.secondaryPressMode then
@@ -492,7 +494,8 @@ do
             folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
             folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
             folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
-            folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 350, value = 50 })
+            folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 350, value = 20 })
+            folder:AddSlider({ text = 'Held delay (ms)', flag = 'heldDelay', min = -20, max = 100, value = -20 })
         end
 
         local folder = window:AddFolder('Manual keybinds') do
