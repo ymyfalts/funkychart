@@ -226,6 +226,17 @@ local fireSignal, rollChance do
     end
 end
 
+
+local function notify(text, duration)
+    return akali.Notify({
+        Title = 'Funky friday autoplayer', 
+        Description = text,
+        Duration = duration or 1,
+    })
+end
+
+library.notify = notify
+
 -- save manager
 local saveManager = {} do
     local defaultSettings = [[{"Funky Friday":{"goodChance":{"value":0,"type":"slider"},"badChance":{"value":0,"type":"slider"},"okChance":{"value":0,"type":"slider"},"autoPlayer":{"state":false,"type":"toggle"},"goodBind":{"key":"Two","type":"bind"},"sickChance":{"value":100,"type":"slider"},"okBind":{"key":"Three","type":"bind"},"sickBind":{"key":"One","type":"bind"},"Menu toggle":{"key":"Delete","type":"bind"},"secondaryPressMode":{"state":false,"type":"toggle"},"autoDelay":{"value":50,"type":"slider"},"autoPlayerToggle":{"key":"End","type":"bind"},"badBind":{"key":"Four","type":"bind"},"autoPlayerMode":{"value":"Chances","type":"list"},"missChance":{"value":0,"type":"slider"}}}]]
@@ -328,6 +339,7 @@ local saveManager = {} do
             if window.title == 'Configs' then continue end
 
             local storage = data[window.title]
+            if not storage then continue end
 
             recurseLibraryOptions(window.options, function(option)
                 local parser = optionTypes[option.type]
@@ -341,8 +353,8 @@ local saveManager = {} do
 end
 
 -- autoplayer
-do
-    local chanceValues = { 
+local chanceValues do
+    chanceValues = { 
         Sick = 96,
         Good = 92,
         Ok = 87,
@@ -452,7 +464,7 @@ do
                             end
 
                             if arrow.Data.Length > 0 then
-                                fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000) + (library.flags.heldDelay / 1000))
+                                fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000))
                             else
                                 fastWait(library.flags.autoDelay / 1000 + (library.flags.heldDelay / 1000))
                             end
@@ -472,136 +484,140 @@ do
     end)
 end
 
--- menu
-do
-    local window = library:CreateWindow('Funky Friday') do
-        local folder = window:AddFolder('Autoplayer') do
-            local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
+-- menu 
 
-            folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode' }) -- alternate mode if something breaks on krml or whatever
-            folder:AddLabel({ text = "Enable if autoplayer breaks" })
-            
-            -- Fixed to use toggle:SetState
-            folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function()
-                toggle:SetState(not toggle.state)
-            end })
+local windows = {
+    autoplayer = library:CreateWindow('Autoplayer'),
+    customization = library:CreateWindow('Customization'),
+    configs = library:CreateWindow('Configs'),
+    misc = library:CreateWindow('Miscellaneous')
+}
 
-            folder:AddDivider()
-            folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual'  } })
-            folder:AddDivider()
-            folder:AddSlider({ text = 'Sick %', flag = 'sickChance', min = 0, max = 100, value = 100 })
-            folder:AddSlider({ text = 'Good %', flag = 'goodChance', min = 0, max = 100, value = 0 })
-            folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
-            folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
-            folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
-            folder:AddDivider()
-            folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 500, value = 20 })
-            folder:AddSlider({ text = 'Held delay (ms)', flag = 'heldDelay', min = -20, max = 100, value = -20 })
+local folder = windows.autoplayer:AddFolder('Main') do
+    local toggle = folder:AddToggle({ text = 'Autoplayer', flag = 'autoPlayer' })
+
+    folder:AddToggle({ text = 'Secondary press mode', flag = 'secondaryPressMode', callback = function()
+        if library.flags.secondaryPressMode then 
+            library.notify('Only enable "Secondary press mode" if the main autoplayer does not work! It may cause issues or not be as accurate!')
         end
+    end }) -- alternate mode if something breaks on krml or whatever
+    folder:AddLabel({ text = "Enable if autoplayer breaks" })
 
-        local folder = window:AddFolder('Manual keybinds') do
-            folder:AddBind({ text = 'Sick', flag = 'sickBind', key = Enum.KeyCode.One, hold = true, callback = function(val) library.flags.sickHeld = (not val) end, })
-            folder:AddBind({ text = 'Good', flag = 'goodBind', key = Enum.KeyCode.Two, hold = true, callback = function(val) library.flags.goodHeld = (not val) end, })
-            folder:AddBind({ text = 'Ok', flag = 'okBind', key = Enum.KeyCode.Three, hold = true, callback = function(val) library.flags.okayHeld = (not val) end, })
-            folder:AddBind({ text = 'Bad', flag = 'badBind', key = Enum.KeyCode.Four, hold = true, callback = function(val) library.flags.missHeld = (not val) end, })
-        end
+    -- Fixed to use toggle:SetState
+    folder:AddBind({ text = 'Autoplayer toggle', flag = 'autoPlayerToggle', key = Enum.KeyCode.End, callback = function()
+        toggle:SetState(not toggle.state)
+    end })
 
-        local folder = window:AddFolder('Credits') do
-            folder:AddLabel({ text = 'Jan - UI library' })
-            folder:AddLabel({ text = 'wally - Script' })
-            folder:AddLabel({ text = 'Sezei - Contributor'})
-            folder:AddLabel({ text = 'aKinlei - Notifications'})
-        end
-
-        window:AddLabel({ text = 'Version 1.9' })
-        window:AddLabel({ text = 'Updated 12/11/21' })
-        window:AddLabel({ text = 'new save manager!' })
-      
-        window:AddDivider()
-        window:AddButton({ text = 'Unload script', callback = function()
-            shared._unload()
-            library.notify('Successfully unloaded script!', 2)
-        end })
-        window:AddButton({ text = 'Copy discord', callback = function()
-            if pcall(setclipboard, "https://wally.cool/discord") then
-                library.notify('Successfully copied discord', 2)
-            end
-        end })
-        window:AddDivider()
-        window:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
-    end
-
-    local function notify(text, duration)
-        return akali.Notify({
-            Title = 'Funky friday autoplayer', 
-            Description = text,
-            Duration = duration or 1,
-        })
-    end
-
-    library.notify = notify
-
-    if type(readfile) == 'function' and type(writefile) == 'function' and type(makefolder) == 'function' and type(isfolder) == 'function' then
-        if not isfolder('funky_friday_autoplayer\\configs') then
-            makefolder('funky_friday_autoplayer')
-            makefolder('funky_friday_autoplayer\\configs')
-        end
-
-        local window = library:CreateWindow('Configs') do
-            window:AddBox({ text = 'Config name', value = '', flag = 'configNameInput' })
-            library._configList = window:AddList({ text = 'Config list', values = { 'default' }, flag = 'configList' })
-            
-            window:AddButton({ text = 'Save config', callback = function()
-                local name = library.flags.configNameInput
-                if name:gsub(' ', '') == '' then
-                    return notify('Failed to save. [invalid config name]', 3)
-                end
-
-                saveManager:SaveConfig(name)
-            end })
-            
-            window:AddButton({ text = 'Load config', callback = function()
-                local name = library.flags.configList
-                
-                if name:gsub(' ', '') == '' then
-                    return notify('Failed to load. [invalid config name]', 3)
-                end
-
-                if not isfile('funky_friday_autoplayer\\configs\\' .. name) then
-                    return notify('Failed to load. [config does not exist]', 3)
-                end
-
-                saveManager:LoadConfig(name)
-            end })
-
-            window:AddDivider()
-
-            function library.refreshConfigs()
-                for _, value in next, library._configList.values do
-                    if value == 'default' then continue end
-                    library._configList:RemoveValue(tostring(value))
-                end
-
-                local files = listfiles('funky_friday_autoplayer\\configs')
-                for i = 1, #files do
-                    files[i] = files[i]:gsub('funky_friday_autoplayer\\configs\\', '')
-                    library._configList:AddValue(files[i])
-                end
-
-                if files[1] then
-                    library._configList:SetValue(files[1])
-                else
-                    library._configList:SetValue('default')
-                end
-            end
-
-            window:AddButton({ text = 'Refresh configs', callback = library.refreshConfigs })
-        end
-        task.delay(1, library.refreshConfigs)
-    else
-        notify('Failed to create configs window due to your exploit missing certain file functions.', 2)
-    end
-
-    library:Init()
-    library.notify(string.format('Loaded script in %.4f second(s)!\nUsed Http cache: %s', tick() - start, tostring(usedCache)), 3)
+    folder:AddDivider()
+    folder:AddList({ text = 'Autoplayer mode', flag = 'autoPlayerMode', values = { 'Chances', 'Manual'  } })
 end
+
+local folder = windows.customization:AddFolder('Hit chances') do
+    folder:AddSlider({ text = 'Sick %', flag = 'sickChance', min = 0, max = 100, value = 100 })
+    folder:AddSlider({ text = 'Good %', flag = 'goodChance', min = 0, max = 100, value = 0 })
+    folder:AddSlider({ text = 'Ok %', flag = 'okChance', min = 0, max = 100, value = 0 })
+    folder:AddSlider({ text = 'Bad %', flag = 'badChance', min = 0, max = 100, value = 0 })
+    folder:AddSlider({ text = 'Miss %', flag = 'missChance', min = 0, max = 100, value = 0 })
+end
+
+local folder = windows.customization:AddFolder('Timing') do
+    folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 500, value = 20 })
+    folder:AddSlider({ text = 'Held delay (ms)', flag = 'heldDelay', min = -20, max = 100, value = -20 })
+end
+
+local folder = windows.customization:AddFolder('Keybinds') do
+    folder:AddBind({ text = 'Sick', flag = 'sickBind', key = Enum.KeyCode.One, hold = true, callback = function(val) library.flags.sickHeld = (not val) end, })
+    folder:AddBind({ text = 'Good', flag = 'goodBind', key = Enum.KeyCode.Two, hold = true, callback = function(val) library.flags.goodHeld = (not val) end, })
+    folder:AddBind({ text = 'Ok', flag = 'okBind', key = Enum.KeyCode.Three, hold = true, callback = function(val) library.flags.okayHeld = (not val) end, })
+    folder:AddBind({ text = 'Bad', flag = 'badBind', key = Enum.KeyCode.Four, hold = true, callback = function(val) library.flags.missHeld = (not val) end, })
+end
+
+if type(readfile) == 'function' and type(writefile) == 'function' and type(makefolder) == 'function' and type(isfolder) == 'function' then
+    if not isfolder('funky_friday_autoplayer\\configs') then
+        makefolder('funky_friday_autoplayer')
+        makefolder('funky_friday_autoplayer\\configs')
+    end
+
+    local window = windows.configs do
+        window:AddBox({ text = 'Config name', value = '', flag = 'configNameInput' })
+        library._configList = window:AddList({ text = 'Config list', values = { 'default' }, flag = 'configList' })
+        
+        window:AddButton({ text = 'Save config', callback = function()
+            local name = library.flags.configNameInput
+            if name:gsub(' ', '') == '' then
+                return notify('Failed to save. [invalid config name]', 3)
+            end
+
+            saveManager:SaveConfig(name)
+        end })
+        
+        window:AddButton({ text = 'Load config', callback = function()
+            local name = library.flags.configList
+            
+            if name:gsub(' ', '') == '' then
+                return notify('Failed to load. [invalid config name]', 3)
+            end
+
+            if not isfile('funky_friday_autoplayer\\configs\\' .. name) then
+                return notify('Failed to load. [config does not exist]', 3)
+            end
+
+            saveManager:LoadConfig(name)
+        end })
+
+        window:AddDivider()
+
+        function library.refreshConfigs()
+            for _, value in next, library._configList.values do
+                if value == 'default' then continue end
+                library._configList:RemoveValue(tostring(value))
+            end
+
+            local files = listfiles('funky_friday_autoplayer\\configs')
+            for i = 1, #files do
+                files[i] = files[i]:gsub('funky_friday_autoplayer\\configs\\', '')
+                library._configList:AddValue(files[i])
+            end
+
+            if files[1] then
+                library._configList:SetValue(files[1])
+            else
+                library._configList:SetValue('default')
+            end
+        end
+
+        window:AddButton({ text = 'Refresh configs', callback = library.refreshConfigs })
+    end
+    task.delay(1, library.refreshConfigs)
+else
+    notify('Failed to create configs window due to your exploit missing certain file functions.', 2)
+end
+
+local folder = windows.misc:AddFolder('Credits') do
+    folder:AddLabel({ text = 'Jan - UI library' })
+    folder:AddLabel({ text = 'wally - Script' })
+    folder:AddLabel({ text = 'Sezei - Contributor'})
+    folder:AddLabel({ text = 'aKinlei - Notifications'})
+end
+
+windows.misc:AddLabel({ text = 'Version 1.9' })
+windows.misc:AddLabel({ text = 'Updated 12/11/21' })
+windows.misc:AddLabel({ text = 'new save manager!' })
+
+windows.misc:AddDivider()
+windows.misc:AddButton({ text = 'Unload script', callback = function()
+    shared._unload()
+    library.notify('Successfully unloaded script!', 2)
+end })
+
+windows.misc:AddButton({ text = 'Copy discord', callback = function()
+    if pcall(setclipboard, "https://wally.cool/discord") then
+        library.notify('Successfully copied discord', 2)
+    end
+end })
+
+windows.misc:AddDivider()
+windows.misc:AddBind({ text = 'Menu toggle', key = Enum.KeyCode.Delete, callback = function() library:Close() end })
+
+library:Init()
+library.notify(string.format('Loaded script in %.4f second(s)!\nUsed Http cache: %s', tick() - start, tostring(usedCache)), 3)
