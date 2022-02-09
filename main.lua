@@ -464,9 +464,9 @@ local chanceValues do
                             end
 
                             if arrow.Data.Length > 0 then
-                                fastWait(arrow.Data.Length + (library.flags.autoDelay / 1000))
+                                fastWait(arrow.Data.Length + (library.flags.heldDelay / 1000))
                             else
-                                fastWait(library.flags.autoDelay / 1000 + (library.flags.heldDelay / 1000))
+                                fastWait(library.flags.autoDelay / 1000)
                             end
 
                             if library.flags.secondaryPressMode then
@@ -600,9 +600,9 @@ local folder = windows.misc:AddFolder('Credits') do
     folder:AddLabel({ text = 'aKinlei - Notifications'})
 end
 
-windows.misc:AddLabel({ text = 'Version 1.9' })
+windows.misc:AddLabel({ text = 'Version 1.9a' })
 windows.misc:AddLabel({ text = 'Updated 12/11/21' })
-windows.misc:AddLabel({ text = 'new save manager!' })
+windows.misc:AddLabel({ text = 'i fixed stuff at 3 am' })
 
 windows.misc:AddDivider()
 windows.misc:AddButton({ text = 'Unload script', callback = function()
