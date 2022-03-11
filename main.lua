@@ -109,7 +109,7 @@ if type(getloadedmodules) ~= 'function' then return fail('Unsupported exploit (m
 if type(getgc) ~= 'function' then return fail('Unsupported exploit (misssing "getgc")') end
 
 local library = urlLoad("https://raw.githubusercontent.com/wally-rblx/uwuware-ui/main/main.lua")
-local akali = urlLoad("https://gist.githubusercontent.com/wally-rblx/e010db020afe8259048a0c3c7262cdf8/raw/76ae0921ac9bd3215017e635d2c1037a37262240/notif.lua")
+local akali     = urlLoad("https://gist.githubusercontent.com/wally-rblx/e010db020afe8259048a0c3c7262cdf8/raw/76ae0921ac9bd3215017e635d2c1037a37262240/notif.lua")
 
 local httpService = game:GetService('HttpService')
 
@@ -389,6 +389,8 @@ local chanceValues do
     end
 
     shared._id = httpService:GenerateGUID(false)
+
+    local rng = Random.new()
     runService:BindToRenderStep(shared._id, 1, function()
         if (not library.flags.autoPlayer) then return end
         if typeof(framework.SongPlayer.CurrentlyPlaying) ~= 'Instance' then return end
@@ -419,65 +421,70 @@ local chanceValues do
             end
 
             if (arrow.Side == framework.UI.CurrentSide) and (not arrow.Marked) and framework.SongPlayer.CurrentlyPlaying.TimePosition > 0 then
-                local indice = (arrow.Data.Position % count)
-                local position = indice .. ''
+                local position = (arrow.Data.Position % count) .. '' 
 
-                if (position) then
-                    local hitboxOffset = 0 do
-                        local settings = framework.Settings;
-                        local offset = type(settings) == 'table' and settings.HitboxOffset;
-                        local value = type(offset) == 'table' and offset.Value;
+                local hitboxOffset = 0 do
+                    local settings = framework.Settings;
+                    local offset = type(settings) == 'table' and settings.HitboxOffset;
+                    local value = type(offset) == 'table' and offset.Value;
 
-                        if type(value) == 'number' then
-                            hitboxOffset = value;
-                        end
-
-                        hitboxOffset = hitboxOffset / 1000
+                    if type(value) == 'number' then
+                        hitboxOffset = value;
                     end
 
-                    local songTime = framework.SongPlayer.CurrentTime do
-                        local configs = framework.SongPlayer.CurrentSongConfigs
-                        local playbackSpeed = type(configs) == 'table' and configs.PlaybackSpeed
+                    hitboxOffset = hitboxOffset / 1000
+                end
 
-                        if type(playbackSpeed) ~= 'number' then
-                            playbackSpeed = 1
-                        end
+                local songTime = framework.SongPlayer.CurrentTime do
+                    local configs = framework.SongPlayer.CurrentSongConfigs
+                    local playbackSpeed = type(configs) == 'table' and configs.PlaybackSpeed
 
-                        songTime = songTime /  playbackSpeed
+                    if type(playbackSpeed) ~= 'number' then
+                        playbackSpeed = 1
                     end
 
-                    local noteTime = math.clamp((1 - math.abs(arrow.Data.Time - (songTime + hitboxOffset))) * 100, 0, 100)
+                    songTime = songTime /  playbackSpeed
+                end
 
-                    local result = rollChance()
-                    arrow._hitChance = arrow._hitChance or result;
+                local noteTime = math.clamp((1 - math.abs(arrow.Data.Time - (songTime + hitboxOffset))) * 100, 0, 100)
 
-                    local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
-                    if hitChance ~= "Miss" and noteTime >= chanceValues[arrow._hitChance] then
-                        fastSpawn(function()
-                            arrow.Marked = true;
-                            local keyCode = keyCodeMap[arrowData[position].Keybinds.Keyboard[1]]
+                local result = rollChance()
+                arrow._hitChance = arrow._hitChance or result;
 
-                            if library.flags.secondaryPressMode then
-                                virtualInputManager:SendKeyEvent(true, keyCode, false, nil)
+                local hitChance = (library.flags.autoPlayerMode == 'Manual' and result or arrow._hitChance)
+                if hitChance ~= "Miss" and noteTime >= chanceValues[arrow._hitChance] then
+                    fastSpawn(function()
+                        arrow.Marked = true;
+                        local keyCode = keyCodeMap[arrowData[position].Keybinds.Keyboard[1]]
+
+                        if library.flags.secondaryPressMode then
+                            virtualInputManager:SendKeyEvent(true, keyCode, false, nil)
+                        else
+                            fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
+                        end
+
+                        if arrow.Data.Length > 0 then
+                            if library.flags.delayMode == 'Random' then
+                                fastWait(arrow.Data.Length + rng:NextNumber(library.flags.heldNoteDelayMin, library.flags.heldNoteDelayMax) / 1000)
                             else
-                                fireSignal(scrollHandler, userInputService.InputBegan, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
-                            end
-
-                            if arrow.Data.Length > 0 then
                                 fastWait(arrow.Data.Length + (library.flags.heldDelay / 1000))
+                            end
+                        else
+                            if library.flags.delayMode == 'Random' then
+                                fastWait(rng:NextNumber(library.flags.noteDelayMin, library.flags.noteDelayMax) / 1000)
                             else
                                 fastWait(library.flags.autoDelay / 1000)
                             end
+                        end
 
-                            if library.flags.secondaryPressMode then
-                                virtualInputManager:SendKeyEvent(false, keyCode, false, nil)
-                            else
-                                fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
-                            end
+                        if library.flags.secondaryPressMode then
+                            virtualInputManager:SendKeyEvent(false, keyCode, false, nil)
+                        else
+                            fireSignal(scrollHandler, userInputService.InputEnded, { KeyCode = keyCode, UserInputType = Enum.UserInputType.Keyboard }, false)
+                        end
 
-                            arrow.Marked = nil;
-                        end)
-                    end
+                        arrow.Marked = nil;
+                    end)
                 end
             end
         end
@@ -523,6 +530,18 @@ end
 local folder = windows.customization:AddFolder('Timing') do
     folder:AddSlider({ text = 'Release delay (ms)', flag = 'autoDelay', min = 0, max = 500, value = 20 })
     folder:AddSlider({ text = 'Held delay (ms)', flag = 'heldDelay', min = -20, max = 100, value = -20 })
+end
+
+local folder = windows.customization:AddFolder('Random timing') do
+    folder:AddList({ text = 'Delay mode', flag = 'delayMode', values = { 'Manual', 'Random' }})
+    folder:AddDivider()
+    folder:AddLabel({ text = 'Note delay' })
+    folder:AddSlider({ flag = 'noteDelayMin', text = 'Minimum (ms)', min = 0, max = 200 })
+    folder:AddSlider({ flag = 'noteDelayMax', text = 'Maximum (ms)', min = 0, max = 200, value = 20 })
+    folder:AddDivider()
+    folder:AddLabel({ text = 'Held note delay' })
+    folder:AddSlider({ flag = 'heldNoteDelayMin', text = 'Minimum (ms)', min = 0, max = 200 })
+    folder:AddSlider({ flag = 'heldNoteDelayMax', text = 'Maximum (ms)', min = 0, max = 200, value = 20 })
 end
 
 local folder = windows.customization:AddFolder('Keybinds') do
@@ -600,9 +619,9 @@ local folder = windows.misc:AddFolder('Credits') do
     folder:AddLabel({ text = 'aKinlei - Notifications'})
 end
 
-windows.misc:AddLabel({ text = 'Version 1.9a' })
-windows.misc:AddLabel({ text = 'Updated 12/11/21' })
-windows.misc:AddLabel({ text = 'i fixed stuff at 3 am' })
+windows.misc:AddLabel({ text = 'Version 1.9b' })
+windows.misc:AddLabel({ text = 'Updated 3/11/22' })
+windows.misc:AddLabel({ text = 'idk what to put here anymore' })
 
 windows.misc:AddDivider()
 windows.misc:AddButton({ text = 'Unload script', callback = function()
