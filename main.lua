@@ -511,7 +511,7 @@ local folder = windows.customization:AddFolder('Unlockables') do
                     setupvalue(obj, i, loadStyleProxy)
 
                     table.insert(library.callbacks, function()
-                        warn(pcall(setupvalue, obj, i, loadStyle))
+                        pcall(setupvalue, obj, i, loadStyle)
                     end)
                 end
             end
