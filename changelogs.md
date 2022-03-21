@@ -1,6 +1,9 @@
 # Change logs
 * Some updates are missing either because I forgot them or they were really small.
 
+## 3/20/22 (1.9c)
+	+ Added 'Unlock developer arrows' button in new Unlockables section!
+
 ## 3/11/22 (1.9b)
 	+ added 'Random timing' to Customization section
 

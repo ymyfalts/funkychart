@@ -1,67 +1,3 @@
---[[
-Change logs:
-
-1/14/22
-    * first update of the new year!
-    * added a settings saving / loading system.
-    * added some save manager code for this ui library, not all option types are supported or tested.
-
-12/5/21
-    * Fixed issues with noteTime calculation, causing some songs like Triple Trouble to break. Report bugs as always
-
-11/9/21
-    + Added support for new modes (9Key for example)
-
-9/26/21 
-    + Added 'Unload'
-    * Fixed issues with accuracy.
-
-9/25/21 (patch 1)
-    * Added a few sanity checks
-    * Fixed some errors
-    * Should finally fix invisible notes (if it doesnt, i hate this game)
-
-9/25/21
-    * Code refactoring.
-    * Fixed unsupported exploit check
-    * Implemented safer URL loading routine.
-    * Tweaked autoplayer (implemented hitbox offset, uses game code to calculate score and hit type now)
-
-9/19/21
-   * Miss actually ignores the note.
-
-8/20/21
-   ! This update was provided by Sezei (https://github.com/greasemonkey123/ff-bot-new)
-       * I renamed some stuff and changed their default 'Autoplayer bind'
-
-   + Added 'Miss chance'
-   + Added 'Release delay' (note: higher values means a higher chance to miss)
-   + Added 'Autoplayer bind'
-   * Added new credits
-   * Made folder names more clear
-
-8/2/21
-    ! KRNL has since been fixed, enjoy!
-
-    + Added 'Manual' mode which allows you to force the notes to hit a specific type by holding down a keybind.
-    * Switched fastWait and fastSpawn to Roblox's task libraries
-    * Attempted to fix 'invalid key to next' errors
-
-5/12/21
-    * Attempted to fix the autoplayer missing as much.
-
-5/16/21
-    * Attempt to fix invisible notes.
-    * Added hit chances & an autoplayer toggle
-    ! Hit chances are a bit rough but should work.
-
-Information:
-    Officially supported: Synapse X, Script-Ware, KRNL, Fluxus
-    Needed functions: setthreadcontext, getconnections, getgc, getloaodedmodules 
-
-    You can find contact information on the GitHub repository (https://github.com/wally-rblx/funky-friday-autoplay)
---]]
-
 local start = tick()
 local client = game:GetService('Players').LocalPlayer;
 local set_identity = (type(syn) == 'table' and syn.set_thread_identity) or setidentity or setthreadcontext
@@ -370,6 +306,8 @@ local chanceValues do
         pcall(shared._unload)
     end
 
+    library.callbacks = {}
+
     library.threads = {}
     function shared._unload()
         if shared._id then
@@ -385,6 +323,10 @@ local chanceValues do
 
         for i = 1, #library.threads do
             coroutine.close(library.threads[i])
+        end
+
+        for i = 1, #library.callbacks do
+            task.spawn(library.callbacks[i])
         end
     end
 
@@ -544,6 +486,47 @@ local folder = windows.customization:AddFolder('Random timing') do
     folder:AddSlider({ flag = 'heldNoteDelayMax', text = 'Maximum (ms)', min = 0, max = 200, value = 20 })
 end
 
+local folder = windows.customization:AddFolder('Unlockables') do
+    -- Note: I know you can do this with UserId but it only works if you run it before opening the notes menu
+    -- My script should work no matter the order of which you run things :)
+    local loadStyle = nil
+    local function loadStyleProxy(...)
+        -- This forces the styles to reload every time
+        local unknown = getupvalue(loadStyle, 1)
+        unknown.Style = nil
+        setupvalue(loadStyle, 1, unknown)
+
+        return loadStyle(...)
+    end
+
+    local gc = getgc()
+    for i = 1, #gc do
+        local obj = gc[i]
+        if type(obj) == 'function' then
+            local nups = getinfo(obj).nups;
+            for i = 1, nups do
+                local upv = getupvalue(obj, i)
+                if type(upv) == 'function' and getinfo(upv).name == 'LoadStyle' then
+                    loadStyle = loadStyle or upv
+                    setupvalue(obj, i, loadStyleProxy)
+
+                    table.insert(library.callbacks, function()
+                        warn(pcall(setupvalue, obj, i, loadStyle))
+                    end)
+                end
+            end
+        end
+    end
+
+    folder:AddButton({ text = 'Unlock developer arrows', callback = function(state)
+        local idx = table.find(framework.SongsWhitelist, client.UserId)
+        if idx then return end
+
+        notify('Developer arrows have been unlocked!', 3)
+        table.insert(framework.SongsWhitelist, client.UserId)
+    end })
+end
+
 local folder = windows.customization:AddFolder('Keybinds') do
     folder:AddBind({ text = 'Sick', flag = 'sickBind', key = Enum.KeyCode.One, hold = true, callback = function(val) library.flags.sickHeld = (not val) end, })
     folder:AddBind({ text = 'Good', flag = 'goodBind', key = Enum.KeyCode.Two, hold = true, callback = function(val) library.flags.goodHeld = (not val) end, })
@@ -612,16 +595,18 @@ else
     notify('Failed to create configs window due to your exploit missing certain file functions.', 2)
 end
 
-local folder = windows.misc:AddFolder('Credits') do
-    folder:AddLabel({ text = 'Jan - UI library' })
-    folder:AddLabel({ text = 'wally - Script' })
-    folder:AddLabel({ text = 'Sezei - Contributor'})
-    folder:AddLabel({ text = 'aKinlei - Notifications'})
-end
 
-windows.misc:AddLabel({ text = 'Version 1.9b' })
-windows.misc:AddLabel({ text = 'Updated 3/11/22' })
-windows.misc:AddLabel({ text = 'idk what to put here anymore' })
+windows.misc:AddLabel({ text = 'Credits:' })
+windows.misc:AddDivider()
+windows.misc:AddLabel({ text = 'Jan - UI library' })
+windows.misc:AddLabel({ text = 'wally - Script' })
+windows.misc:AddLabel({ text = 'Sezei - Contributor'})
+windows.misc:AddLabel({ text = 'aKinlei - Notifications'})
+windows.misc:AddDivider()
+
+windows.misc:AddLabel({ text = 'Version 1.9c' })
+windows.misc:AddLabel({ text = 'Updated 3/20/22' })
+windows.misc:AddLabel({ text = 'Thank you for using this script!' })
 
 windows.misc:AddDivider()
 windows.misc:AddButton({ text = 'Unload script', callback = function()
