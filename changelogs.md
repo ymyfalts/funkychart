@@ -1,4 +1,4 @@
-### Change logs
+## Change logs
 
 # 3/11/22 (1.9b)
 	+ added 'Random timing' to Customization section
