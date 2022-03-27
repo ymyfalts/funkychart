@@ -1,8 +1,8 @@
 # FunkyChart for Lego Touhou Rhythm Game (Funky Friday)
 A fork of wally-rblx's [funky-friday-autoplayer](https://github.com/wally-rblx/funky-friday-autoplay).<br>
 Play your favorite 4-key osu!mania charts in Funky Friday with this epic script.<br><br>
-**[Trailer](https://www.youtube.com/watch?v=mzDmDsj2Wj4)**<br><br>
-Only works with Synapse X.<br><br>
+Only works with Synapse X.<br>
+### **[Trailer](https://www.youtube.com/watch?v=mzDmDsj2Wj4)**<br>
 ### **[DOWNLOAD THE LATEST RELEASE](https://github.com/accountrev/funkychart/releases/latest)**<br><br>
 ![Comparison](https://user-images.githubusercontent.com/55156874/155612058-96974ec2-1c24-443a-b985-fb13c151c6d7.gif)
 
@@ -22,9 +22,9 @@ Just remember, this is all **client-sided and singleplayer**, meaning no one wil
 This repository contains a few files, most importantly **the converter** and **the in-game GUI**.<br><br>
 The converter made written in Python and converts .osu files into readable Lua.<br>
 The GUI was written in Lua for executors, and you can load and configure the songs that you want.<br><br>
-### If you are experienced with Python, you can download the source code (it is open-source :D)<br>
+### If you are experienced with Python, you can download the source code (currently open source)<br>
 ### If you are just looking for the download, **[CLICK HERE FOR THE LATEST RELEASE!!!](https://github.com/accountrev/funkychart/releases/latest)**
 
 ## Instructions
-### Check out **[this video](https://www.youtube.com/watch?v=juM02bEOqPo)** for the full instructions. Any questions, ask in the Issues tab!<br><br>
+### Check out **[this video](https://www.youtube.com/watch?v=juM02bEOqPo)** for the full instructions. If any questions, ask in the Issues tab!<br><br>
 
