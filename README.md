@@ -1,12 +1,13 @@
 # FunkyChart for Lego Touhou Rhythm Game (Funky Friday)
 A fork of wally-rblx's [funky-friday-autoplayer](https://github.com/wally-rblx/funky-friday-autoplay).<br>
-Play your favorite 4-key osu!mania charts in Funky Friday with this epic script.<br>
+Play your favorite 4-key osu!mania charts in Funky Friday with this epic script.<br><br>
+**[Trailer](https://www.youtube.com/watch?v=mzDmDsj2Wj4)**
 Only works with Synapse X.<br><br>
 ### **[DOWNLOAD THE LATEST RELEASE](https://github.com/accountrev/funkychart/releases/latest)**<br><br>
 ![Comparison](https://user-images.githubusercontent.com/55156874/155612058-96974ec2-1c24-443a-b985-fb13c151c6d7.gif)
 
 ## NOTICE (For the people who never exploited)
-### THIS SCRIPT REQUIRES A PAID EXECUTOR TO WORK ON ROBLOX. IF YOU DONT OWN AN EXECUTOR, BUY SYNAPSE X!<br><br>
+### THIS SCRIPT REQUIRES A PAID EXECUTOR TO WORK ON ROBLOX. IF YOU DONT OWN AN EXECUTOR, BUY SYNAPSE X!<br>
 Synapse X - **[LINK](https://x.synapse.to/)**<br>
 ### BY USING THIS ONLINE, YOU ARE VIOLATING ROBLOX'S TERMS OF SERVICE AND MAY GET YOUR ACCOUNT BANNED OR WORSE.<br><br>
 
