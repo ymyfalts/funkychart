@@ -31,6 +31,12 @@
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 
+[VERSION 1.02]
+
+-   Fixed an error where the colorama module was not found.
+-   Made it so that the Tk window does not pop up everytime it asks for a file.
+-   Fixed an error when you copy an audio file and place it in the same folder (SameFileError).
+
 [VERSION 1.01 - DELAYED]
 
 -   Delayed released due to Roblox's audio privacy update.
@@ -56,11 +62,16 @@ import re
 import os
 import time
 import colorama as clr
+import tkinter as tk
 from tkinter import filedialog as fd
-from shutil import copy
+import shutil
 
 # Required for the colored text to work
 clr.init()
+
+# Cannot hide root Tk window unless I make it
+windowTemp = tk.Tk()
+windowTemp.withdraw()
 
 
 # FunkyChart Logo
@@ -103,7 +114,7 @@ txtFiletype = [('Text File', "*.txt")]
 
 # Clear console and prints logo (thx stackoverflow!)
 
-debugEnableCLS = False
+debugEnableCLS = True
 
 def cls():
     if debugEnableCLS:
@@ -124,7 +135,7 @@ def errorHandler(error, additionalInfo = "", exiting=True):
     elif error == 2:
         print(colorDict["R"] + "The path you provided must be a valid directory.\n" + colorDict["W"] + "ERROR 02")
     elif error == 3:
-        print(colorDict["R"] + "No file provided. Please select a file when asked.\n" + colorDict["W"] + "ERROR 03")
+        print(colorDict["R"] + "No file provided or file already exists. Please select a file when asked.\n" + colorDict["W"] + "ERROR 03")
     elif error == 4:
         print(colorDict["R"] + 'Something is wrong with the beatmap you selected. Please try again and refer to this dictionary.\n\n' + colorDict["W"] + 'beatmapValidation = ' + additionalInfo + "\n\nERROR 04")
     elif error == 5:
@@ -395,7 +406,7 @@ def convertChartToFF(filePath):
 
                 if counter != len(hitobjList):
                     convertedLine = convertedLine + ","
-                    print(counter, convertedLine, "NINE")
+                    # print(counter, convertedLine, "NINE")
 
                 counter += 1
 
@@ -414,7 +425,7 @@ def convertChartToFF(filePath):
 
                 if counter != len(hitobjList):
                     convertedLine = convertedLine + ","
-                    print(counter, convertedLine, "TEN")
+                    # print(counter, convertedLine, "TEN")
 
                 counter += 1
 
@@ -486,8 +497,8 @@ def startProcedure():
     filePathAudio = fd.askdirectory()
 
     try:
-        copy(chartDictionary["audio"], filePathAudio)
-    except FileNotFoundError:
+        shutil.copy(chartDictionary["audio"], filePathAudio)
+    except (FileNotFoundError, shutil.SameFileError) as exception:
         cls()
         errorHandler(3)
 
