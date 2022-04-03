@@ -6,7 +6,7 @@
      / __/ / /_/ / / / / ,< / /_/ / /___/ / / / /_/ / /  / /_  
     /_/    \__,_/_/ /_/_/|_|\__, /\____/_/ /_/\__,_/_/   \__/  
                            /____/
-    v1.01
+    v1.03
     Made with ♥ by accountrev           
 
     Thanks for downloading and using my script, if you're here to just use it once or plan to use it many times.
@@ -18,6 +18,14 @@
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
+
+    [VERSION 1.03]
+
+    -   Fixed version number.
+
+    [VERSION 1.02]
+
+    -   No changes
 
     [VERSION 1.01 - DELAYED]
 
