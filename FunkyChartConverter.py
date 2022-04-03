@@ -31,6 +31,10 @@
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 
+[VERSION 1.03]
+
+-   Fixed an issue with file saving where the converted chart couldn't save correctly. Haha...
+
 [VERSION 1.02]
 
 -   Fixed an error where the colorama module was not found.
@@ -82,7 +86,7 @@ logo = r'''    ______            __         ________               __     ______
 /_/    \__,_/_/ /_/_/|_|\__, /\____/_/ /_/\__,_/_/   \__/   \____/\____/_/ /_/|___/\___/_/   \__/\___/_/     
                        /____/                                                                                
 
-v1.02
+v1.03
 Made with ♥ by accountrev
 '''
 
@@ -432,6 +436,7 @@ def convertChartToFF(filePath):
                 file.write(convertedLine + "\n")
 
         file.write("\n}")
+        file.close()
 
         #if mode == "l":
         #    file.write("loadstring(game:HttpGet(\"https://raw.githubusercontent.com/accountrev/funkychart/main/LocalOnly.lua\", true))()")
@@ -519,8 +524,3 @@ def main():
 # You love to see it
 if __name__ == "__main__":
     main()
-
-    
-
-
-
