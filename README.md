@@ -7,8 +7,9 @@ Only works with Synapse X.<br>
 ![Comparison](https://user-images.githubusercontent.com/55156874/155612058-96974ec2-1c24-443a-b985-fb13c151c6d7.gif)
 
 ## NOTICE (For the people who never exploited)
-### THIS SCRIPT REQUIRES A PAID EXECUTOR TO WORK ON ROBLOX. IF YOU DONT OWN AN EXECUTOR, BUY SYNAPSE X!<br>
+### THIS SCRIPT REQUIRES AN EXECUTOR TO WORK ON ROBLOX. IF YOU DONT OWN AN EXECUTOR, BUY SYNAPSE X OR DOWNLOAD KRNL!<br>
 Synapse X - **[LINK](https://x.synapse.to/)**<br>
+KRNL - **[LINK](https://krnl.ca/)**<br>
 ### BY USING THIS ONLINE, YOU ARE VIOLATING ROBLOX'S TERMS OF SERVICE AND MAY GET YOUR ACCOUNT BANNED OR WORSE.<br><br>
 
 ## Overview and Purpose
