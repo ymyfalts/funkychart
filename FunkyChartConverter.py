@@ -31,6 +31,10 @@
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 
+[VERSION 1.04]
+
+-   Testing support for the Krnl executor
+
 [VERSION 1.03]
 
 -   Fixed an issue with file saving where the converted chart couldn't save correctly. Haha...
@@ -86,7 +90,7 @@ logo = r'''    ______            __         ________               __     ______
 /_/    \__,_/_/ /_/_/|_|\__, /\____/_/ /_/\__,_/_/   \__/   \____/\____/_/ /_/|___/\___/_/   \__/\___/_/     
                        /____/                                                                                
 
-v1.03
+v1.04
 Made with ♥ by accountrev
 '''
 
@@ -384,7 +388,7 @@ def convertChartToFF(filePath):
         #    file.writelines(["_G.customChart.loadedAudioID = \"rbxassetid://" + chartDictionary["audio"] + "\"\n",
         #                     "_G.customChart.timeOffset = 0"])
 
-        file.writelines(["_G.customChart.loadedAudioID = getsynasset(\"FunkyChart/Audio/" + chartDictionary["audio"].split("/")[-1] + "\")\n",
+        file.writelines(["\nif syn then _G.customChart.loadedAudioID = getsynasset(\"FunkyChart/Audio/" + chartDictionary["audio"].split("/")[-1] + "\") else _G.customChart.loadedAudioID = getcustomasset(\"FunkyChart/Audio/" + chartDictionary["audio"].split("/")[-1] + "\") end\n\n",
                              "_G.customChart.timeOffset = 0"])
 
 
@@ -524,3 +528,8 @@ def main():
 # You love to see it
 if __name__ == "__main__":
     main()
+
+    
+
+
+
