@@ -6,7 +6,7 @@
      / __/ / /_/ / / / / ,< / /_/ / /___/ / / / /_/ / /  / /_  
     /_/    \__,_/_/ /_/_/|_|\__, /\____/_/ /_/\__,_/_/   \__/  
                            /____/
-    v1.03
+    v1.04
     Made with ♥ by accountrev           
 
     Thanks for downloading and using my script, if you're here to just use it once or plan to use it many times.
@@ -18,6 +18,10 @@
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
+
+    [VERSION 1.03]
+
+    -   Testing support for the Krnl executor.
 
     [VERSION 1.03]
 
@@ -125,7 +129,7 @@ function Data(mode)
 end
 
 function loadChart(chart)
-    chart = chart or {}
+    chart = chart or ""
 
     if not isfile("FunkyChart/Charts/" .. chart) then
         Announce("Error", chart .. " does not exist!", 10, "loaded")
