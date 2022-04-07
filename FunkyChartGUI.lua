@@ -19,7 +19,7 @@
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 
-    [VERSION 1.03]
+    [VERSION 1.04]
 
     -   Testing support for the Krnl executor.
 
