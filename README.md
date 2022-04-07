@@ -1,7 +1,7 @@
 # FunkyChart for Lyte Interactive's Funky Friday
 A fork of wally-rblx's [funky-friday-autoplayer](https://github.com/wally-rblx/funky-friday-autoplay).<br>
 Play your favorite 4-key osu!mania charts in Funky Friday with this epic script.<br><br>
-Only works with Synapse X.<br>
+Supported for Synapse X and Krnl.<br>
 ### **[Trailer](https://www.youtube.com/watch?v=mzDmDsj2Wj4)**<br>
 ### **[DOWNLOAD THE LATEST RELEASE](https://github.com/accountrev/funkychart/releases/latest)**<br><br>
 ![Comparison](https://user-images.githubusercontent.com/55156874/155612058-96974ec2-1c24-443a-b985-fb13c151c6d7.gif)
@@ -9,7 +9,7 @@ Only works with Synapse X.<br>
 ## NOTICE (For the people who never exploited)
 ### THIS SCRIPT REQUIRES AN EXECUTOR TO WORK ON ROBLOX. IF YOU DONT OWN AN EXECUTOR, BUY SYNAPSE X OR DOWNLOAD KRNL!<br>
 Synapse X - **[LINK](https://x.synapse.to/)**<br>
-KRNL - **[LINK](https://krnl.ca/)**<br>
+Krnl - **[LINK](https://krnl.ca/)**<br>
 ### BY USING THIS ONLINE, YOU ARE VIOLATING ROBLOX'S TERMS OF SERVICE AND MAY GET YOUR ACCOUNT BANNED OR WORSE.<br><br>
 
 ## Overview and Purpose
