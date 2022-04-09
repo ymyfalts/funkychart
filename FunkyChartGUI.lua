@@ -6,7 +6,7 @@
      / __/ / /_/ / / / / ,< / /_/ / /___/ / / / /_/ / /  / /_  
     /_/    \__,_/_/ /_/_/|_|\__, /\____/_/ /_/\__,_/_/   \__/  
                            /____/
-    v1.04
+    v1.05
     Made with ♥ by accountrev           
 
     Thanks for downloading and using my script, if you're here to just use it once or plan to use it many times.
@@ -18,6 +18,11 @@
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
     !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
+
+    [VERSION 1.05]
+
+    -   Added checks for any missing audio
+    -   Added error handler
 
     [VERSION 1.04]
 
@@ -83,6 +88,10 @@ function Announce(messagetitle, messagebody, duration, type)
 	sound:Destroy()
 end
 
+function errorHandler(errorMessage)
+    Announce("An Oopsie Occurred!", errorMessage .. "\nPlease report this!", 100, "error")
+end
+
 
 function Data(mode)
 
@@ -132,12 +141,22 @@ function loadChart(chart)
     chart = chart or ""
 
     if not isfile("FunkyChart/Charts/" .. chart) then
-        Announce("Error", chart .. " does not exist!", 10, "loaded")
+        Announce("Error", chart .. " does not exist!", 10, "error")
         return
+    else
+        loadstring(readfile('FunkyChart/Charts/' .. chart))()
+    end
+    
+    if not isfile(_G.customChart.loadedAudioID) then
+        Announce("No Audio Found!", _G.customChart.loadedAudioID .. " cannot be found for " .. chart .. ".", 10, "error")
+        _G.customChart.loadedAudioID = ""
+        return
+    else
+        getasset = getsynasset or getcustomasset
+        _G.customChart.loadedAudioID = getasset(_G.customChart.loadedAudioID)
     end
 
-    loadstring(readfile('FunkyChart/Charts/' .. chart))()
-    
+
     game.SoundService.ClientMusic.SoundId = _G.customChart.loadedAudioID
     Announce("Song Loaded", _G.customChart.chartName .. "\n" .. _G.customChart.chartAuthor, 10, "loaded")
     Data("s")
@@ -148,7 +167,7 @@ function Chart(preventErrorLag)
     preventErrorLag = preventErrorLag or false
 
     if _G.customChart.loadedAudioID == "" then
-        Announce("Load a song", "Load a song first you dummy!", 5, "loaded")
+        Announce("Load a song", "Load a song first you dummy!", 5, "error")
         return
     end
 
@@ -213,7 +232,10 @@ function loadGUI()
     local CreditsTo = windowCredits:CreateFolder("Credits to...")
 
     Main:Button("Play Chart",function()
-        Chart(errorLagBool)
+        local stat, err = pcall(Chart, errorLagBool)
+        if not stat then
+            errorHandler(err)
+        end
     end)
 
     Main:Button("AutoPlayer",function()
@@ -234,7 +256,10 @@ function loadGUI()
     end)
 
     ChartOptions:Button("Load Chart",function()
-        loadChart(chartLink)
+        local stat, err = pcall(loadChart, chartLink)
+        if not stat then
+            errorHandler(err)
+        end
     end)
 
     GeneralOptions:Toggle("Prevent Error Lag",function(bool)
