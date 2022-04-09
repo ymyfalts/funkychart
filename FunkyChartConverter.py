@@ -35,7 +35,6 @@
 
 -   Added update notifier for future updates.
 
-
 [VERSION 1.04]
 
 -   Testing support for the Krnl executor
