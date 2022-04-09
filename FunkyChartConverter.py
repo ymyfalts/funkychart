@@ -31,6 +31,11 @@
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 !!! Please report any bugs/questions over on the Issues tab on GitHub, I will try to respond ASAP. !!!
 
+[VERSION 1.05]
+
+-   Added update notifier for future updates.
+
+
 [VERSION 1.04]
 
 -   Testing support for the Krnl executor
@@ -64,6 +69,8 @@
 
 #   MODULES
 
+import requests
+import webbrowser
 import sys
 import logging
 import re
@@ -82,6 +89,9 @@ windowTemp = tk.Tk()
 windowTemp.withdraw()
 
 
+version = "v1.05"
+
+
 # FunkyChart Logo
 logo = r'''    ______            __         ________               __     ______                           __           
    / ____/_  ______  / /____  __/ ____/ /_  ____ ______/ /_   / ____/___  ____ _   _____  _____/ /____  _____
@@ -90,7 +100,7 @@ logo = r'''    ______            __         ________               __     ______
 /_/    \__,_/_/ /_/_/|_|\__, /\____/_/ /_/\__,_/_/   \__/   \____/\____/_/ /_/|___/\___/_/   \__/\___/_/     
                        /____/                                                                                
 
-v1.04
+''' + version + '''
 Made with ♥ by accountrev
 '''
 
@@ -113,12 +123,13 @@ difficultyChecks = {"CircleSize" : False}
 hitobjChecks = {"Valid" : False}
 
 # Color dictionary (makes it easier to add color instead of remembering the exact code)
-colorDict = {"R" : clr.Fore.LIGHTRED_EX + clr.Style.BRIGHT, "W" : clr.Fore.WHITE + clr.Style.BRIGHT, "G" : clr.Fore.LIGHTGREEN_EX + clr.Style.BRIGHT}
+colorDict = {"R" : clr.Fore.LIGHTRED_EX + clr.Style.BRIGHT, "W" : clr.Fore.WHITE + clr.Style.BRIGHT, "G" : clr.Fore.LIGHTGREEN_EX + clr.Style.BRIGHT, "Y" : clr.Fore.LIGHTYELLOW_EX + clr.Style.BRIGHT}
 
 # Filetypes for tkinter
 osuFiletype = [('osu! beatmap file', "*.osu")]
 audioFiletype = (('MP3', "*.mp3"), ('WAV', "*.wav"))
 txtFiletype = [('Text File', "*.txt")]
+
 
 # Clear console and prints logo (thx stackoverflow!)
 
@@ -128,7 +139,7 @@ def cls():
     if debugEnableCLS:
         os.system('cls' if os.name=='nt' else 'clear')
         print(colorDict["R"] + logo)
-
+        
 
 # Error handler - to prevent exceptions from happening when in use
 #       additionalInfo - used to print out data to the user
@@ -136,8 +147,8 @@ def cls():
 def errorHandler(error, additionalInfo = "", exiting=True):
 
     # I swear im not yanderedev
-#   if error == 0:
-#       print(colorDict["R"] + "\nThat is not a valid option.\n" + colorDict["W"] + "ERROR 00")
+    if error == 0:
+        print(colorDict["R"] + "\nThat is not a valid option.\n" + colorDict["W"] + "ERROR 00")
     if error == 1:
         print(colorDict["R"] + "The username you provided exceeds the character limit (24). Please enter a proper username.\n" + colorDict["W"] + "ERROR 01")
     elif error == 2:
@@ -163,7 +174,7 @@ def errorHandler(error, additionalInfo = "", exiting=True):
     
     if exiting:
         print(colorDict["R"] + '\n\nClosing in 20 seconds...' + colorDict["W"])
-        time.sleep(10)
+        time.sleep(20)
         exit(0)
 
 
@@ -201,21 +212,20 @@ def filterSound(list):
 # If a requirement is not met, then the user will get redirected to errorHandler.
 def inputSys(mode):
 
-    # Can only allow the "O" or "L" character
-    #if mode == 1:
-    #    while True:
-    #        print("\nType \"O\" or \"L\" to choose.\n")
+    if mode == 1:
+        while True:
+            print("\nType \"Y\" or \"N\" to choose.\n")
 
-    #        input1 = input("# ")
+            input1 = input("# ")
 
-    #        if input1.lower() == "o" or input1.lower() == "l":
-    #            break
-    #        else:
-    #            cls()
-    #            errorHandler(0, exiting = False)
-    #            continue
+            if input1.lower() == "y" or input1.lower() == "n":
+                break
+            else:
+                cls()
+                errorHandler(0, exiting = False)
+                continue
 
-    #    return input1
+        return input1
 
 
     # Can only allow a maximum of 24 characters
@@ -241,6 +251,24 @@ def inputSys(mode):
     #            cls()
     #            errorHandler(11, exiting = False)
         
+
+
+# Update Notifier - notifies if a new verison is available on GitHub
+def checkForUpdate():
+    requestedVersion = requests.get("https://api.github.com/repos/accountrev/funkychart/releases/latest").json()["tag_name"]
+
+    if requestedVersion > version:
+        cls()
+        print(colorDict["Y"] + "There is a new version of FunkyChart available on GitHub! Please update this to continue using the converter.\nYou are using " + version + ", while the latest version is " + requestedVersion + ".\n\n" + colorDict["W"] + "OPENING GITHUB PAGE...")
+        webbrowser.open("https://github.com/accountrev/funkychart/releases/latest")
+        print(colorDict["Y"] + "\n\nYou can still use this converter if you'd like. Would you like to keep using the converter?\n\n")
+
+        ignoreMSG = inputSys(1)
+
+        if ignoreMSG.lower() == "y":
+            return
+        else:
+            exit(0)
 
 # Parses the .osu file that was selected into different lists.
 def parseOsuBeatmap(filename):
@@ -527,9 +555,5 @@ def main():
 
 # You love to see it
 if __name__ == "__main__":
+    checkForUpdate()
     main()
-
-    
-
-
-
